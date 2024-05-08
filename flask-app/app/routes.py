@@ -4,14 +4,12 @@ import os
 from werkzeug.utils import secure_filename
 from .utils import read_excel_file
 from .models import db, MTS
-from .source.data import InventoryItemData, InventoryItem, InventorySheet
+from .source.data import InventoryItem, InventorySheet
 
 bp = Blueprint('main', __name__)
 
 @bp.route('/')
 def index():
-    # check_database_connection()
-    # print(MTS.query.all()[0].item_name)
     return render_template('index.html')
 
 @bp.route('/upload', methods=['POST'])
@@ -71,44 +69,11 @@ def fetch_from_db():
     if not inventories:
         return jsonify({'error': 'No data available. Please upload and read file first.'}), 400
 
-    if False:
-        db_items = MTS.query.all()
-
-        inventories_db = []
-
-        inventory = InventorySheet(
-            date=datetime.strptime("11.04.2010", "%d.%m.%Y").date(),
-            number="test db sheet")
-        
-        for db_item in db_items:
-            inventory.add_item(InventoryItem(
-                mts_object=db_item,
-                parent_inventory = inventory,
-                MTS=MTS,
-                db=db
-            ))
-
-        inventories_db.append(inventory)
-        
-        return return_data_as_dict(inventories_db, 'Fetched success!', f'{len(db_items)} Elements were found!')
-
     found = 0
-
     for inventory in inventories:
         for item in inventory.items:
-            # print('st')
-            # for i in item.excel_data.inventory_number:
-            #     print(i)
-
-            # print('st1')
-            # for i in item.excel_data.inventory_number.strip():
-            #     print(i)
-            # break
-
             db_item = MTS.query.filter_by(inventory_number=item.excel_data.inventory_number).first()
             
-            # print(MTS.query.filter_by(inventory_number=item.excel_data.inventory_number).all())
-
             if db_item:
                 found += 1
                 item.add_mts_data(
