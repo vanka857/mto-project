@@ -67,19 +67,13 @@ class InventoryItemData:
 
 
 class InventoryItem:
-    def __init__(self, excel_object=None, mts_object=None, parent_inventory=None, MTS=None, db=None):
+    def __init__(self, excel_object=None, mts_object=None, parent_inventory=None):
         self.excel_data = InventoryItemData.from_excel(excel_object) if excel_object else None
         self.mts_data = InventoryItemData.from_mts(mts_object) if mts_object else None
         self.parent_inventory = parent_inventory
-        self.MTS = MTS
-        self.db = db
 
-    def add_mts_data(self, mts_object, MTS=None, db=None):
+    def add_mts_data(self, mts_object):
         self.mts_data = InventoryItemData.from_mts(mts_object)
-        if MTS is not None:
-            self.MTS = MTS 
-        if db is not None:
-            self.db = db
 
     def add_excel_data(self, mts_object):
         self.excel_data = InventoryItemData.from_excel(mts_object)
@@ -92,9 +86,9 @@ class InventoryItem:
                 mts_entry.write_off_date = self.parent_inventory.date
                 self.db.session.commit()
 
-    def put_on_balance(self):
+    def put_on_balance(self, MTS, db):
         if self.excel_data:
-            new_mts = self.MTS(
+            new_mts = MTS(
                 item_name=self.excel_data.item_name,
                 inventory_number=self.excel_data.inventory_number,
                 unit_of_measure=self.excel_data.unit_of_measure,
@@ -103,8 +97,8 @@ class InventoryItem:
                 registration_doc_no=self.parent_inventory.number,
                 registration_date=self.parent_inventory.date
             )
-            self.db.session.add(new_mts)
-            self.db.session.commit()
+            db.session.add(new_mts)
+            db.session.commit()
 
     def to_dict(self):
         return {

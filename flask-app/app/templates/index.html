@@ -20,6 +20,7 @@
                 <img src="{{ url_for('static', filename='images/loading.gif') }}" alt="Processing..." />
             </div>
             <button id="fetch-from-db-button" onclick="fetchFromDB()" disabled>Добавить данные из базы</button>
+            <button id="send-updates-button" onclick="sendUpdates()" disabled>Отправить изменения в базу</button>
         </div>
         <div id="output"></div>
     </div>

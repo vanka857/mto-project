@@ -134,8 +134,11 @@ function createSheet(sheet, sheet_index, container) {
     details.appendChild(summary);
     
     const table = createTable(sheet, sheet_index);
-    
-    details.appendChild(table);
+
+    const inventoryTableContainer = document.createElement('div');
+    inventoryTableContainer.className = 'inventory-table-container';
+    inventoryTableContainer.appendChild(table);
+    details.appendChild(inventoryTableContainer);
     section.appendChild(details);
     container.appendChild(section);
 }
@@ -254,7 +257,63 @@ function fetchFromDB() {
     .then(data => {
         db_connected = true;
         updateTable(data);
+        document.getElementById('send-updates-button').disabled = false;
     })
     .catch(error => console.error('Error:', error));
 }
     
+function parseId(id) {
+    const parts = id.split('-');
+    const sheetIndex = parseInt(parts[0], 10); // Преобразуем в число, если это необходимо
+    const itemIndex = parseInt(parts[1], 10); // Преобразуем в число, если это необходимо
+
+    return { sheetIndex, itemIndex };
+}
+
+// Функция для сбора и отправки изменений на сервер
+function sendUpdates() {
+    let updates = [];
+
+    for (let id in inventoryItems) {
+        const state = inventoryItems[id];
+        if (state.writeOffChecked || state.putOnBalanceChecked) {
+            const { sheetIndex, itemIndex } = parseId(id);
+            updates.push({
+                sheetIndex: sheetIndex,
+                itemIndex: itemIndex,
+                writeOff: state.writeOffChecked,
+                putOnBalance: state.putOnBalanceChecked,
+            });
+        }
+    }
+
+    // Проверка, есть ли что отправлять
+    if (updates.length > 0) {
+        submitChanges(updates);
+        fetchFromDB();
+    } else {
+        console.log('Нет изменений для отправки');
+    }
+}
+
+// Функция отправки изменений на сервер
+function submitChanges(updates) {
+    fetch('/update-inventory', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ updates: updates })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Ответ сервера:', data.message);
+        if (data.success) {
+            alert('Изменения успешно отправлены!');
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка отправки изменений:', error);
+        alert('Ошибка при отправке данных на сервер. Проверьте консоль для деталей.');
+    });
+}

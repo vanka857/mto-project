@@ -61,6 +61,29 @@ def return_data_as_dict(data, status=None, message=None):
     sheets_data = [sheet.to_dict() for sheet in data]
     return jsonify({'status': status, 'message': message, 'inventories': sheets_data})
 
+@bp.route('/update-inventory', methods=['POST'])
+def update_inventory():
+    updates = request.get_json().get('updates', [])
+    
+    if updates:
+        inventories = session.get('inventories')
+        for update in updates:
+            process_update(update, inventories)
+        return jsonify({'success': True, 'message': 'Изменения успешно обработаны'})
+    else:
+        return jsonify({'success': False, 'message': 'Нет данных для обработки'}), 400
+
+def process_update(update, inventories):
+    sheetIndex = int(update['sheetIndex'])
+    itemIndex = int(update['itemIndex'])
+
+    # Логика обработки изменений
+    if update.get('writeOff'):
+        print(f"Списание актива с ID: {sheetIndex}-{itemIndex}")
+        inventories[sheetIndex].items[itemIndex].write_off()
+    if update.get('putOnBalance'):
+        print(f"Постановка на учет актива с ID: {sheetIndex}-{itemIndex}")
+        inventories[sheetIndex].items[itemIndex].put_on_balance(MTS, db)
 
 @bp.route('/fetch-from-db', methods=['GET'])
 def fetch_from_db():
@@ -77,9 +100,7 @@ def fetch_from_db():
             if db_item:
                 found += 1
                 item.add_mts_data(
-                    mts_object=db_item,
-                    MTS=MTS,
-                    db=db
+                    mts_object=db_item
                 )
 
     return return_data_as_dict(inventories, 'Fetched success!', f'{found} Elements were fetched!')
