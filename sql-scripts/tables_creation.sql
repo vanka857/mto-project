@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS mto.mts
   end_of_life           TIMESTAMP,             -- Date when the item is expected to be unusable
   registration_date     DATE,                  -- Date of item registration
   revaluation_date      DATE,                  -- Date of item revaluation
+  written_off           BOOLEAN DEFAULT FALSE,
   write_off_date        DATE,                  -- Date of item write-off
   registration_doc_no   VARCHAR(30),          -- Document number for registration
   revaluation_doc_no    VARCHAR(30),          -- Document number for revaluation

@@ -67,23 +67,33 @@ def update_inventory():
     
     if updates:
         inventories = session.get('inventories')
+        not_founded_sheet = session.get('not_founded_sheet')
         for update in updates:
-            process_update(update, inventories)
+            process_update(update, inventories, not_founded_sheet)
         return jsonify({'success': True, 'message': 'Изменения успешно обработаны'})
     else:
         return jsonify({'success': False, 'message': 'Нет данных для обработки'}), 400
 
-def process_update(update, inventories):
+def process_update(update, inventories, not_founded_sheet):
     sheetIndex = int(update['sheetIndex'])
     itemIndex = int(update['itemIndex'])
+    
+    sheet = None
+    if sheetIndex >= len(inventories):
+        if not_founded_sheet:
+            sheet = not_founded_sheet
+        else: 
+            print('Error', not_founded_sheet)
+    else:
+        sheet = inventories[sheetIndex]
 
     # Логика обработки изменений
     if update.get('writeOff'):
         print(f"Списание актива с ID: {sheetIndex}-{itemIndex}")
-        inventories[sheetIndex].items[itemIndex].write_off()
+        sheet.items[itemIndex].write_off(MTS, db)
     if update.get('putOnBalance'):
         print(f"Постановка на учет актива с ID: {sheetIndex}-{itemIndex}")
-        inventories[sheetIndex].items[itemIndex].put_on_balance(MTS, db)
+        sheet.items[itemIndex].put_on_balance(MTS, db)
 
 @bp.route('/fetch-from-db', methods=['GET'])
 def fetch_from_db():
@@ -93,14 +103,33 @@ def fetch_from_db():
         return jsonify({'error': 'No data available. Please upload and read file first.'}), 400
 
     found = 0
+    founded_inv_numbers = []
     for inventory in inventories:
         for item in inventory.items:
-            db_item = MTS.query.filter_by(inventory_number=item.excel_data.inventory_number).first()
+            inventory_number = item.excel_data.inventory_number    
+            db_item = MTS.query \
+                .filter(MTS.inventory_number == inventory_number, MTS.written_off == False) \
+                .first()
             
             if db_item:
+                founded_inv_numbers.append(inventory_number)
                 found += 1
                 item.add_mts_data(
                     mts_object=db_item
                 )
+    
+    not_founded_items = MTS.query \
+        .filter(MTS.inventory_number.notin_(founded_inv_numbers), MTS.written_off == False) \
+        .order_by(MTS.item_name).all()
+    
+    not_founded_sheet = InventorySheet(name='Не найденное')
 
-    return return_data_as_dict(inventories, 'Fetched success!', f'{found} Elements were fetched!')
+    for not_founded_item in not_founded_items:
+        not_founded_sheet.add_item(
+            InventoryItem(mts_object=not_founded_item))
+        
+    session['not_founded_sheet'] = not_founded_sheet
+
+    inventories_to_send = inventories + [not_founded_sheet]
+
+    return return_data_as_dict(inventories_to_send, 'Fetched success!', f'{found} Elements were fetched!')

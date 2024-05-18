@@ -40,6 +40,7 @@ class MTS(db.Model):
     end_of_life = db.Column(db.DateTime)
     registration_date = db.Column(db.Date)
     revaluation_date = db.Column(db.Date)
+    written_off = db.Column(db.Boolean, default=False)
     write_off_date = db.Column(db.Date)
     registration_doc_no = db.Column(db.String(255))
     revaluation_doc_no = db.Column(db.String(255))

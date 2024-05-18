@@ -63,9 +63,14 @@ function updateItemState(id) {
         }
 
     } else if (state.mtsExists && !state.excelExists) {
-        statusMtsCell.textContent = state.inStockChecked ? 'Отсутствует в ведомости' : 'Списать как утраченное';
-        statusMtsCell.style.color = state.inStockChecked ? 'orange' : 'red';
-        writeOffCheckbox.disabled = !state.inStockChecked;
+        if (!state.inStockChecked) {
+            statusMtsCell.textContent = state.writeOffChecked ? 'Будет списано как утраченное' : 'Можно списать как утраченное';
+            statusMtsCell.style.color = state.writeOffChecked ? 'orange' : 'red';
+        } else {
+            statusMtsCell.textContent = state.writeOffChecked ? 'Будет списано' : 'Можно списать';
+            statusMtsCell.style.color = state.writeOffChecked ? 'orange' : 'red';
+        }
+        writeOffCheckbox.disabled = false;
     }
 }
 
@@ -130,7 +135,10 @@ function createSheet(sheet, sheet_index, container) {
     
     const details = document.createElement('details');
     const summary = document.createElement('summary');
-    summary.textContent = `Инвентаризационная ведомость №${sheet.number} от ${sheet.date}`;
+
+    if (sheet.number) summary.textContent = `Инвентаризационная ведомость №${sheet.number} от ${sheet.date}`;
+    else summary.textContent = `${sheet.name}`;
+        
     details.appendChild(summary);
     
     const table = createTable(sheet, sheet_index);
@@ -146,7 +154,19 @@ function createSheet(sheet, sheet_index, container) {
 function createTable(sheet, sheet_index) {
     const table = document.createElement('table');
     table.className = 'inventory-table';
-    table.innerHTML = `<thead><tr><th>Номер в ведомости</th><th>Инвентарный номер</th><th>Наименование</th><th>Единица измерения</th><th>Количество</th><th>Стоимость</th></tr></thead>`;
+    table.innerHTML = `
+    <thead><tr>
+    <th>Номер (в ведомости / в базе)</th>
+    <th>Инвентарный номер</th>
+    <th>Наименование</th>
+    <th>Единица измерения</th>
+    <th>Количество</th>
+    <th>Стоимость</th>
+    <th>Дата постановки на учет</th>
+    <th>Документ постановки на учет</th>
+    <th></th>
+    <th></th>
+    </tr></thead>`;
     
     const tbody = document.createElement('tbody');
     
@@ -179,12 +199,14 @@ function createDataRow(data, className, id, sheet_index, index) {
     id1 = `${sheet_index}-${index}`;
 
     row.innerHTML = `
-        <td>${data.num_in_inventory || ''}</td>
+        <td>${data.number || ''}</td>
         <td>${data.inventory_number || ''}</td>
         <td>${data.item_name || ''}</td>
         <td>${data.unit_of_measure || ''}</td>
         <td>${data.volume || ''}</td>
         <td>${data.price || ''}</td>
+        <td>${data.registration_date || ''}</td>
+        <td>${data.registration_doc_no || ''}</td>
     `;
 
     const checkboxCell = document.createElement('td');

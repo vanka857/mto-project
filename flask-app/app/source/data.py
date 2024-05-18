@@ -4,8 +4,8 @@ from datetime import datetime
 class InventoryItemData:
     def __init__(self, item_name=None, inventory_number=None, unit_of_measure=None, 
                  volume=None, price=None, end_of_life=None, registration_date=None, 
-                 revaluation_date=None, write_off_date=None, registration_doc_no=None, 
-                 revaluation_doc_no=None, write_off_doc_no=None, num_in_inventory=None):
+                 revaluation_date=None, written_off=None, write_off_date=None, registration_doc_no=None, 
+                 revaluation_doc_no=None, write_off_doc_no=None, number=None):
         self.item_name = item_name
         self.inventory_number = inventory_number
         self.unit_of_measure = unit_of_measure
@@ -14,11 +14,12 @@ class InventoryItemData:
         self.end_of_life = end_of_life
         self.registration_date = registration_date
         self.revaluation_date = revaluation_date
+        self.written_off = written_off
         self.write_off_date = write_off_date
         self.registration_doc_no = registration_doc_no
         self.revaluation_doc_no = revaluation_doc_no
         self.write_off_doc_no = write_off_doc_no
-        self.num_in_inventory = num_in_inventory
+        self.number = number
 
     def to_dict(self):
         return {
@@ -30,11 +31,12 @@ class InventoryItemData:
             "end_of_life": self.end_of_life.strftime('%Y-%m-%d %H:%M:%S') if self.end_of_life else None, 
             "registration_date": self.registration_date.strftime('%Y-%m-%d') if self.registration_date else None, 
             "revaluation_date": self.revaluation_date.strftime('%Y-%m-%d') if self.revaluation_date else None, 
+            "written_off": self.written_off,
             "write_off_date": self.write_off_date.strftime('%Y-%m-%d') if self.write_off_date else None, 
             "registration_doc_no": self.registration_doc_no,
             "revaluation_doc_no": self.revaluation_doc_no,
             "write_off_doc_no": self.write_off_doc_no,
-            "num_in_inventory": self.num_in_inventory
+            "number": self.number
         }
 
     @staticmethod
@@ -45,7 +47,7 @@ class InventoryItemData:
             unit_of_measure=excel_object['Measure'],
             volume=excel_object['Volume'],
             price=excel_object['Price'],
-            num_in_inventory=excel_object['Number']
+            number=excel_object['Number']
         )
 
     @staticmethod
@@ -59,10 +61,12 @@ class InventoryItemData:
             end_of_life=mts_object.end_of_life,
             registration_date=mts_object.registration_date,
             revaluation_date=mts_object.revaluation_date,
+            written_off=mts_object.written_off,
             write_off_date=mts_object.write_off_date,
             registration_doc_no=mts_object.registration_doc_no,
             revaluation_doc_no=mts_object.revaluation_doc_no,
-            write_off_doc_no=mts_object.write_off_doc_no
+            write_off_doc_no=mts_object.write_off_doc_no,
+            number=mts_object.id
         )
 
 
@@ -78,13 +82,16 @@ class InventoryItem:
     def add_excel_data(self, mts_object):
         self.excel_data = InventoryItemData.from_excel(mts_object)
 
-    def write_off(self):
+    def write_off(self, MTS, db, doc_no=None, date=None):
         if self.mts_data:
-            mts_entry = self.MTS.query.filter_by(inventory_number=self.mts_data.inventory_number).first()
+            mts_entry = MTS.query.get(self.mts_data.number)
             if mts_entry:
-                mts_entry.write_off_doc_no = self.parent_inventory.number
-                mts_entry.write_off_date = self.parent_inventory.date
-                self.db.session.commit()
+                if doc_no:
+                    mts_entry.write_off_doc_no = doc_no
+                if date:
+                    mts_entry.write_off_date = date
+                mts_entry.written_off = True
+                db.session.commit()
 
     def put_on_balance(self, MTS, db):
         if self.excel_data:
@@ -108,16 +115,18 @@ class InventoryItem:
     
 
 class InventorySheet:
-    def __init__(self, date=None, number=None):
+    def __init__(self, date=None, number=None, name=None):
         self.items = []  # Список элементов InventoryItem
         self.date = date
         self.number = number
+        self.name = name
 
     def add_item(self, item):
         self.items.append(item)
 
     def to_dict(self):
         return {
+            "name": self.name,
             "date": self.date.strftime('%Y-%m-%d') if self.date else None, 
             "number": self.number,
             "items": [item.to_dict() for item in self.items]
