@@ -213,7 +213,7 @@ function createDataRow(data, className, id, sheet_index, index) {
     const statusCell = document.createElement('td');
 
     if (className === 'mts-row') {
-        const inStockCheckbox = createCheckbox(`in-stock-${id1}`, 'Есть в наличие');
+        const inStockCheckbox = createCheckbox(`in-stock-${id1}`, 'Есть в наличии');
         checkboxCell.appendChild(inStockCheckbox);
 
         const writeOffCheckbox = createCheckbox(`write-off-${id1}`, 'Списать');
