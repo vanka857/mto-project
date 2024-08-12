@@ -14,12 +14,6 @@ header {
 
     /* Добавление теней для придания объема */
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-
-    /* Обеспечение адаптивности */
-    /* display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap; */
 }
 
 header nav ul {
@@ -53,9 +47,63 @@ header nav ul li a:hover {
     color: #c7e2ff; /* Изменение цвета текста при наведении */
 }
 
+div.navigator-filter {
+    margin: 10px;
+}
+
 .container {
     width: 90%;
     margin: 0 auto;
+}
+
+/* Общие стили для формы */
+form {
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+/* Стили для полей формы */
+label {
+    display: block; /* Полный блочный элемент */
+    font-size: 1rem; /* Размер шрифта для меток */
+    margin-bottom: 5px; /* Отступ снизу от меток */
+}
+
+input[type="text"], 
+select {
+    width: 100%; /* Полная ширина полей ввода */
+    padding: 10px; /* Внутренние отступы полей ввода */
+    margin-bottom: 15px; /* Отступ снизу от полей ввода */
+    border: 1px solid #ccc; /* Граница полей ввода */
+    border-radius: 4px; /* Закругленные углы полей ввода */
+    box-sizing: border-box; /* Учитывает границы и внутренние отступы в ширине */
+}
+
+input[type="text"]:focus, 
+select:focus {
+    border-color: #007BFF; /* Цвет границы при фокусе */
+    outline: none; /* Убираем стандартный контур при фокусе */
+}
+
+.results {
+    margin-top: 20px; /* Отступ сверху для результатов поиска */
+}
+
+.results ul {
+    list-style-type: none; /* Убираем маркеры списка */
+    padding: 0; /* Убираем внутренние отступы списка */
+}
+
+.results ul li {
+    padding: 10px; /* Внутренние отступы для элементов списка */
+    border-bottom: 1px solid #ddd; /* Граница снизу элементов списка */
+}
+
+.results ul li:last-child {
+    border-bottom: none; /* Убираем границу у последнего элемента списка */
 }
 
 .inventory-section details {
@@ -100,7 +148,18 @@ input[type="checkbox"]:disabled + label {
     margin-bottom: 20px;
 }
 
-input{
+/* input[type="file"]{
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+} */
+
+button, input[type=file]::file-selector-button, input[type=submit]{
     background-color: #007BFF;
     color: white;
     border: none;
@@ -111,22 +170,11 @@ input{
     transition: background-color 0.3s ease;
 }
 
-button{
-    background-color: #007BFF;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    margin: 10px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-button:hover {
+button:hover, input[type=file]::file-selector-button:hover,  input[type=submit]:hover {
     background-color: #0056b3;
 }
 
-button:disabled {
+button:disabled, input[type=file]::file-selector-button:disabled ,  input[type=submit]:disabled{
     background-color: #ccc;
     cursor: not-allowed;
 }

@@ -2,9 +2,13 @@ from flask import Blueprint, render_template, request, session, jsonify, current
 from datetime import datetime
 import os
 from werkzeug.utils import secure_filename
+from sqlalchemy.orm import aliased
+from sqlalchemy import func
 from .utils import read_excel_file
-from .models import db, MTS
+from .models import db, MTS, Room, Staff, Movement, Appointment
+from .forms import SearchForm
 from .source.data import InventoryItem, InventorySheet
+
 
 
 bp = Blueprint('main', __name__)
@@ -19,9 +23,83 @@ def home_page():
 def fetch_page():
     return render_template('fetch.html', app_title=app_title, page_title='внесение данных')
 
-@bp.route('/navigator')
+@bp.route('/navigator', methods = ['GET', 'POST'])
 def navigator_page():
-    return render_template('navigator.html', app_title=app_title, page_title='поиск')
+    form = SearchForm()
+
+    # Получаем список уникальных фамилий ответственных и названий помещений
+    form.responsible.choices = [('', 'Не выбрано')] + [
+        (s.surname, s.surname) for s in db.session.query(Staff.surname).distinct()
+    ]
+    form.location.choices = [('', 'Не выбрано')] + [
+        (r.name_, r.name_) for r in db.session.query(Room.name_).distinct()
+    ]
+
+    results = None
+
+    if form.validate_on_submit():
+        responsible_surname = form.responsible.data
+        location_name = form.location.data
+        query = form.name_or_inventory_number.data
+
+        # Алиасы для таблиц
+        latest_appointment = aliased(Appointment)
+        latest_movement = aliased(Movement)
+
+        # Подзапрос для получения последнего назначения ответственного для каждого MTS
+        appointment_subquery = db.session.query(
+            Appointment.mts_id,
+            func.max(Appointment.date_time).label('latest_date')
+        ).group_by(Appointment.mts_id).subquery()
+
+        # Подзапрос для получения последнего перемещения для каждого MTS
+        movement_subquery = db.session.query(
+            Movement.mts_id,
+            func.max(Movement.date_time).label('latest_date')
+        ).group_by(Movement.mts_id).subquery()
+
+        # Основной запрос с JOIN и фильтрацией
+        filters = []
+
+        # Фильтрация по фамилии ответственного
+        if responsible_surname:
+            filters.append(Staff.surname == responsible_surname)
+
+        # Фильтрация по названию помещения
+        if location_name:
+            filters.append(Room.name_ == location_name)
+
+        if query:
+            filters.append((MTS.item_name.ilike(f'{query}%')) | (MTS.inventory_number.ilike(f'{query}%')))
+
+        results = db.session.query(MTS, 
+                                   Staff.surname.label('responsible_surname'),
+                                   latest_appointment.date_time.label('latest_appointment_date_time'),
+                                   Room.name_.label('room_name'),
+                                   latest_movement.date_time.label('latest_movement_date_time')
+        ).join(
+            appointment_subquery,
+            appointment_subquery.c.mts_id == MTS.id
+        ).join(
+            latest_appointment,
+            (latest_appointment.mts_id == MTS.id) &
+            (latest_appointment.date_time == appointment_subquery.c.latest_date)
+        ).join(
+            Staff,
+            Staff.id == latest_appointment.owner_id
+        ).join(
+            movement_subquery,
+            movement_subquery.c.mts_id == MTS.id
+        ).join(
+            latest_movement,
+            (latest_movement.mts_id == MTS.id) &
+            (latest_movement.date_time == movement_subquery.c.latest_date)
+        ).join(
+            Room,
+            Room.id == latest_movement.room_id
+        ).filter(*filters).all()
+
+    return render_template('navigator.html', app_title=app_title, page_title='поиск', form=form, results=results)
 
 @bp.route('/upload', methods=['POST'])
 def upload():

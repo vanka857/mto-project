@@ -2,7 +2,78 @@
 
 {% block content %}
 <div class="container">
-    <p>Здесь можно будет искать МТС по инвентарному номеру, ответственному лицу, помещению и другим параметрам</p>
+    <form method="POST">
+        {{ form.csrf_token }}
+        <div class="navigator-filter">
+            <label for="responsible">Ответственный</label>
+            {{ form.responsible }}
+        </div>
+        <div class="navigator-filter">
+            <label for="location">Помещение</label>
+            {{ form.location }}
+        </div>
+        <div class="navigator-filter">
+            <label for="name_or_inventory_number">Название или инвентарный номер</label>
+            {{ form.name_or_inventory_number }}
+        </div>
+        <div>
+            {{ form.submit }}
+        </div>
+    </form>
+
+    {% if results %}
+        <h2>Результаты поиска</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Название</th>
+                    <th>Инвентарный номер</th>
+                    <th>Ответственный</th>
+                    <th>Последнее назначение</th>
+                    <th>Последнее перемещение</th>
+                    <th>Текущее помещение</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in results %}
+                    <tr>
+                        <td>{{ item.MTS.item_name }}</td>
+                        <td>{{ item.MTS.inventory_number }}</td>
+                        <td>
+                            {% if item.responsible_surname %}
+                                {{ item.responsible_surname }}
+                            {% else %}
+                                Не назначен
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.latest_appointment_date_time %}
+                                {{ item.latest_appointment_date_time.strftime('%Y-%m-%d %H:%M:%S') }}<br>
+                            {% else %}
+                                Нет данных
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.room_name %}
+                                {{ item.room_name }}
+                            {% else %}
+                                Не известно
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.latest_movement_date_time %}
+                                {{ item.latest_movement_date_time.strftime('%Y-%m-%d %H:%M:%S') }}
+                            {% else %}
+                                Нет данных
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% elif form.is_submitted() %}
+        <p>По вашему запросу ничего не найдено.</p>
+    {% endif %}
 </div>
 <script src="{{ url_for('static', filename='js/navigator.js') }}"></script>
 {% endblock %}
