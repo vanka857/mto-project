@@ -5,7 +5,7 @@ class Department(db.Model):
     __tablename__ = 'departments'
     __table_args__ = {'schema': 'mto'}
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(200))
+    name_ = db.Column(db.String(200))
     parent_id = db.Column(db.Integer, db.ForeignKey('mto.departments.id'))
     children = db.relationship('Department', backref=db.backref('parent', remote_side=[id]))
 
@@ -13,7 +13,7 @@ class Room(db.Model):
     __tablename__ = 'rooms'
     __table_args__ = {'schema': 'mto'}
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(500))
+    name_ = db.Column(db.String(500))
     purpose = db.Column(db.String(500))
     address = db.Column(db.String(500))
 
@@ -22,7 +22,7 @@ class Staff(db.Model):
     __table_args__ = {'schema': 'mto'}
     id = db.Column(db.Integer, primary_key=True)
     surname = db.Column(db.String(50))
-    name = db.Column(db.String(50))
+    name_ = db.Column(db.String(50))
     patronymic = db.Column(db.String(50))
     position = db.Column(db.String(500))
     rank = db.Column(db.String(50))

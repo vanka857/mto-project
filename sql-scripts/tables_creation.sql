@@ -48,20 +48,19 @@ CREATE TABLE IF NOT EXISTS mto.mts
 
 CREATE TABLE IF NOT EXISTS mto.appointments
 (
-  mts          INTEGER  NOT NULL,
+  mts_id       INTEGER  NOT NULL,
   owner_id     INTEGER  NOT NULL,
   old_owner_id INTEGER,
   date_time    TIMESTAMP,
   reason       VARCHAR(500),
-  CONSTRAINT PK_appointments PRIMARY KEY (mts),
-  CONSTRAINT FK_mts_TO_appointments FOREIGN KEY (mts) REFERENCES mto.mts(id),
+  CONSTRAINT FK_mts_TO_appointments FOREIGN KEY (mts_id) REFERENCES mto.mts(id),
   CONSTRAINT FK_staff_TO_appointments FOREIGN KEY (owner_id) REFERENCES mto.staff(id),
   CONSTRAINT FK_staff_TO_appointments1 FOREIGN KEY (old_owner_id) REFERENCES mto.staff(id)
 );
 
 CREATE TABLE IF NOT EXISTS mto.movements
 (
-  mts_id      INTEGER PRIMARY KEY,
+  mts_id      INTEGER NOT NULL,
   room_id     INTEGER NOT NULL,
   old_room_id INTEGER,
   date_time   TIMESTAMP NULL,

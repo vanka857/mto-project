@@ -41,3 +41,49 @@ VALUES
     ('Сканер документов Canon ScanJet', '410200001003', 'шт.', 8900, '2022-03-27', '0000-000525'),
     ('Монитор Dell UltraSharp 27"', '410200001004', 'шт.', 37000, '2022-03-27', '0000-000525'),
     ('Клавиатура механическая Logitech G915', '410200001005', 'шт.', 12990, '2022-03-27', '0000-000525');
+
+INSERT INTO mto.appointments (mts_id, owner_id, old_owner_id, date_time, reason)
+VALUES 
+    (1, 1, NULL, NOW() - INTERVAL '10 days', 'Initial assignment'),
+    (1, 2, 1, NOW() - INTERVAL '5 days', 'Reassigned due to role change'),
+    (2, 2, NULL, NOW() - INTERVAL '15 days', 'Initial assignment'),
+    (2, 1, 2, NOW() - INTERVAL '8 days', 'Reassigned to new project'),
+    (3, 2, NULL, NOW() - INTERVAL '20 days', 'Initial assignment'),
+    (3, 1, 2, NOW() - INTERVAL '12 days', 'Reassigned due to relocation'),
+    (4, 1, NULL, NOW() - INTERVAL '25 days', 'Initial assignment'),
+    (4, 3, 1, NOW() - INTERVAL '10 days', 'Reassigned to new department'),
+    (5, 3, NULL, NOW() - INTERVAL '30 days', 'Initial assignment'),
+    (5, 2, 3, NOW() - INTERVAL '15 days', 'Reassigned to new role'),
+    (6, 1, NULL, NOW() - INTERVAL '10 days', 'Initial assignment'),
+    (6, 2, 1, NOW() - INTERVAL '5 days', 'Reassigned due to role change'),
+    (7, 2, NULL, NOW() - INTERVAL '15 days', 'Initial assignment'),
+    (7, 1, 2, NOW() - INTERVAL '8 days', 'Reassigned to new project'),
+    (8, 2, NULL, NOW() - INTERVAL '20 days', 'Initial assignment'),
+    (8, 1, 2, NOW() - INTERVAL '12 days', 'Reassigned due to relocation'),
+    (9, 1, NULL, NOW() - INTERVAL '25 days', 'Initial assignment'),
+    (9, 3, 1, NOW() - INTERVAL '10 days', 'Reassigned to new department'),
+    (10, 3, NULL, NOW() - INTERVAL '30 days', 'Initial assignment'),
+    (10, 2, 3, NOW() - INTERVAL '15 days', 'Reassigned to new role');
+
+INSERT INTO mto.movements (mts_id, room_id, old_room_id, date_time, person_id)
+VALUES 
+    (1, 1, NULL, NOW() - INTERVAL '12 days', 1),
+    (1, 2, 1, NOW() - INTERVAL '6 days', 1),
+    (2, 2, NULL, NOW() - INTERVAL '18 days', 3),
+    (2, 3, 2, NOW() - INTERVAL '9 days', 3),
+    (3, 3, NULL, NOW() - INTERVAL '22 days', 2),
+    (3, 1, 3, NOW() - INTERVAL '11 days', 2),
+    (4, 2, NULL, NOW() - INTERVAL '27 days', 2),
+    (4, 1, 2, NOW() - INTERVAL '13 days', 2),
+    (5, 3, NULL, NOW() - INTERVAL '32 days', 2),
+    (5, 1, 3, NOW() - INTERVAL '18 days', 2),
+    (6, 1, NULL, NOW() - INTERVAL '12 days', 1),
+    (6, 2, 1, NOW() - INTERVAL '6 days', 1),
+    (7, 2, NULL, NOW() - INTERVAL '18 days', 3),
+    (7, 3, 2, NOW() - INTERVAL '9 days', 3),
+    (8, 3, NULL, NOW() - INTERVAL '22 days', 2),
+    (8, 1, 3, NOW() - INTERVAL '11 days', 2),
+    (9, 2, NULL, NOW() - INTERVAL '27 days', 2),
+    (9, 1, 2, NOW() - INTERVAL '13 days', 2),
+    (10, 3, NULL, NOW() - INTERVAL '32 days', 2),
+    (10, 1, 3, NOW() - INTERVAL '18 days', 2);
