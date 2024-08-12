@@ -8,7 +8,7 @@ from .source.data import InventoryItem, InventorySheet
 
 
 bp = Blueprint('main', __name__)
-app_title = 'Материально-техническое обеспечение 0.1.0'
+app_title = 'Материально-техническое обеспечение 0.1.1'
 
 @bp.route('/')
 def home_page():
