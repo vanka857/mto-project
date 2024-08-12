@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ app_title }} — {{page_title}}</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+</head>
+<body>
+    <header>
+        <h1>{{ app_title }}</h1>
+        <nav>
+            <ul>
+                <li><a href="/fetch" class="{{ 'active' if request.path == '/fetch' else '' }}">Внесение данных</a></li>
+                <li><a href="/navigator" class="{{ 'active' if request.path == '/navigator' else '' }}">Поиск</a></li>
+            </ul>
+        </nav>
+    </header>
+    
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+</body>
+</html>

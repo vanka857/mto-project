@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, session, jsonify, current_app
+from flask import Blueprint, render_template, request, session, jsonify, current_app, redirect, url_for
 from datetime import datetime
 import os
 from werkzeug.utils import secure_filename
@@ -6,11 +6,22 @@ from .utils import read_excel_file
 from .models import db, MTS
 from .source.data import InventoryItem, InventorySheet
 
+
 bp = Blueprint('main', __name__)
+app_title = 'Материально-техническое обеспечение 0.1.0'
 
 @bp.route('/')
-def index():
-    return render_template('index.html')
+def home_page():
+    # Редирект с корневого URL на подстраницу
+    return redirect(url_for('main.fetch_page'))
+
+@bp.route('/fetch')
+def fetch_page():
+    return render_template('fetch.html', app_title=app_title, page_title='внесение данных')
+
+@bp.route('/navigator')
+def navigator_page():
+    return render_template('navigator.html', app_title=app_title, page_title='поиск')
 
 @bp.route('/upload', methods=['POST'])
 def upload():
@@ -55,7 +66,6 @@ def read():
 
         return return_data_as_dict(inventories, status, message)
     return jsonify({'error': 'No file uploaded'}), 400
-    
 
 def return_data_as_dict(data, status=None, message=None):
     sheets_data = [sheet.to_dict() for sheet in data]

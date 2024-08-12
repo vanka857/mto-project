@@ -7,10 +7,6 @@ function hideLoading() {
     document.getElementById('loading').style.display = 'none';
 }
 
-function is_empty(object) {
-    return !object || Object.keys(object).length === 0;
-}
-
 let inventoryItems = {};
 let db_connected = false;
 

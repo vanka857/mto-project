@@ -1,3 +1,63 @@
+body, html {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+}
+
+header {
+    background-color: #007BFF; /* Синий фон */
+    color: white; /* Белый цвет текста */
+    padding: 10px 20px; /* Внутренние отступы */
+    text-align: center; /* Центрирование текста */
+    margin-bottom: 20px; /* Отступ снизу */
+
+    /* Добавление теней для придания объема */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+    /* Обеспечение адаптивности */
+    /* display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap; */
+}
+
+header nav ul {
+    list-style-type: none; /* Убираем маркеры списка */
+    margin: 0; /* Убираем внешние отступы */
+    padding: 0; /* Убираем внутренние отступы */
+    display: flex; /* Размещаем элементы в одну линию */
+}
+
+header nav ul li {
+    margin-right: 20px; /* Отступы между элементами меню */
+}
+
+header nav ul li:last-child {
+    margin-right: 0; /* Убираем отступ у последнего элемента */
+}
+
+header nav ul li a {
+    color: white; /* Цвет текста ссылок */
+    text-decoration: none; /* Убираем подчеркивание */
+    font-weight: bold; /* Жирный текст */
+    font-size: 24px;
+    transition: color 0.2s ease; /* Плавный переход цвета при наведении */
+}
+
+header nav ul li a.active {
+    text-decoration: underline;
+}
+
+header nav ul li a:hover {
+    color: #c7e2ff; /* Изменение цвета текста при наведении */
+}
+
+.container {
+    width: 90%;
+    margin: 0 auto;
+}
+
 .inventory-section details {
     margin-bottom: 20px;
 }
@@ -25,26 +85,6 @@
 /* Стиль для подписи, когда чекбокс неактивен */
 input[type="checkbox"]:disabled + label {
     color: lightgrey;
-}
-
-body, html {
-    font-family: 'Arial', sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f4f4f4;
-}
-
-.container {
-    width: 80%;
-    margin: 0 auto;
-}
-
-header {
-    background: #007BFF;
-    color: white;
-    padding: 10px 20px;
-    text-align: center;
-    margin-bottom: 20px;
 }
 
 .file-upload {
@@ -109,4 +149,3 @@ button:disabled {
 .status-cell {
     font-weight: bold;
 }
-
