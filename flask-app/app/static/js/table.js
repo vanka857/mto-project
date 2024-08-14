@@ -70,6 +70,17 @@ class BasicRow {
             });    
         }
 
+        row.addEventListener('click', function(event) {
+
+            // Проверка, не был ли клик по элементу, который уже имеет свой обработчик
+            if (!event.target.closest('.actionable')) {
+                event.preventDefault();
+
+                setModalContent('ee');
+                showModal();
+            }
+        });
+
         return row;
     }
 
@@ -172,6 +183,7 @@ class ActionableRow extends BasicRow {
 
     createCheckboxCell() {
         const cell = document.createElement('td');
+        cell.className = 'actionable';
         cell.appendChild(this.writeOffCheckbox.render());
         cell.appendChild(this.putOnBalanceCheckbox.render());
         cell.appendChild(this.inStockCheckbox.render());

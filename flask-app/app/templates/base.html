@@ -16,10 +16,17 @@
             </ul>
         </nav>
     </header>
-    
+    <!-- Модальное окно -->
+    <div id="card-modal" class="modal">
+        <div class="card-modal-content">
+            <span id="card-modal-close">&times;</span>
+            <div id="card-modal-body"></div>
+        </div>
+    </div>
     <main>
         {% block content %}{% endblock %}
     </main>
     <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/modal.js') }}"></script>
 </body>
 </html>
