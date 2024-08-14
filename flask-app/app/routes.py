@@ -44,7 +44,7 @@ search_columns_to_show = [
 @bp.route('/')
 def home_page():
     # Редирект с корневого URL на подстраницу
-    return redirect(url_for('main.fetch_page'))
+    return redirect(url_for('main.fetch'))
 
 @bp.route('/fetch')
 def fetch():
