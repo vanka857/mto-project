@@ -1,6 +1,3 @@
-from datetime import datetime
-
-
 class InventoryItemData:
     def __init__(self, item_name=None, inventory_number=None, unit_of_measure=None, 
                  volume=None, price=None, end_of_life=None, registration_date=None, 

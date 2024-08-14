@@ -1,6 +1,6 @@
 import openpyxl
 import re
-import pandas as pd
+
 
 def extract_inventory_details(sheet):
     inventory_descriptions = []

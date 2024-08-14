@@ -1,4 +1,4 @@
-from app import create_app, check_database_connection
+from app import create_app
 
 
 app = create_app()
