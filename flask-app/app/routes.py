@@ -13,6 +13,33 @@ from .source.data import InventoryItem, InventorySheet, BasicSheet, Column
 bp = Blueprint('main', __name__)
 app_title = 'Материально-техническое обеспечение 0.1.1'
 
+inventory_columns_to_show = [
+    Column('number_excel', 'Номер в ведомости'),
+    Column('number_mts', 'Номер в базе'),
+    Column('inventory_number', 'Инвентарный номер'),
+    Column('item_name', 'Наименование'),
+    Column('unit_of_measure', 'Единица измерения'),
+    Column('volume', 'Количество'),
+    Column('price', 'Стоимость'),
+    Column('registration_date', 'Дата постановки на учет'),
+    Column('registration_doc_no', 'Документ постановки на учет'),
+    Column('write_off_date', 'Дата списания'),
+    Column('write_off_doc_no', 'Документ списания'),
+]
+
+search_columns_to_show = [
+    Column('number_mts', 'Номер в базе'),
+    Column('inventory_number', 'Инвентарный номер'),
+    Column('item_name', 'Наименование'),
+    Column('unit_of_measure', 'Единица измерения'),
+    Column('volume', 'Количество'),
+    Column('registration_date', 'Дата постановки на учет'),
+    Column('registration_doc_no', 'Документ постановки на учет'),
+    Column('responsible_surname', 'Ответственный'),
+    Column('latest_appointment_date_time', 'Дата назначения ответственного'),
+    Column('room_name', 'Помещение'),
+    Column('latest_movement_date_time', 'Дата перемещения в помещение'),
+]
 
 @bp.route('/')
 def home_page():
@@ -20,11 +47,11 @@ def home_page():
     return redirect(url_for('main.fetch_page'))
 
 @bp.route('/fetch')
-def fetch_page():
+def fetch():
     return render_template('fetch.html', app_title=app_title, page_title='внесение данных')
 
 @bp.route('/navigator', methods=['GET', 'POST'])
-def navigator_page():
+def navigator():
     form = SearchForm()
 
     # Заполнение списка выборов
@@ -146,34 +173,6 @@ def upload():
         return jsonify({'filename': filename})
     return jsonify({'error': 'Invalid file type'}), 400
 
-inventory_columns_to_show = [
-    Column('number_excel', 'Номер в ведомости'),
-    Column('number_mts', 'Номер в базе'),
-    Column('inventory_number', 'Инвентарный номер'),
-    Column('item_name', 'Наименование'),
-    Column('unit_of_measure', 'Единица измерения'),
-    Column('volume', 'Количество'),
-    Column('price', 'Стоимость'),
-    Column('registration_date', 'Дата постановки на учет'),
-    Column('registration_doc_no', 'Документ постановки на учет'),
-    Column('write_off_date', 'Дата списания'),
-    Column('write_off_doc_no', 'Документ списания'),
-]
-
-search_columns_to_show = [
-    Column('number_mts', 'Номер в базе'),
-    Column('inventory_number', 'Инвентарный номер'),
-    Column('item_name', 'Наименование'),
-    Column('unit_of_measure', 'Единица измерения'),
-    Column('volume', 'Количество'),
-    Column('registration_date', 'Дата постановки на учет'),
-    Column('registration_doc_no', 'Документ постановки на учет'),
-    Column('responsible_surname', 'Ответственный'),
-    Column('latest_appointment_date_time', 'Дата назначения ответственного'),
-    Column('room_name', 'Помещение'),
-    Column('latest_movement_date_time', 'Дата перемещения в помещение'),
-]
-
 @bp.route('/fetch/read', methods=['GET'])
 def read():
     filepath = session.get('file_path')
@@ -208,6 +207,27 @@ def return_data_as_dict(data, status=None, message=None):
 
 @bp.route('/fetch/update-inventory', methods=['POST'])
 def update_inventory():
+    def process_update(update, inventories, not_founded_sheet):
+        sheetIndex = int(update['sheetIndex'])
+        itemIndex = int(update['itemIndex'])
+        
+        sheet = None
+        if sheetIndex >= len(inventories):
+            if not_founded_sheet:
+                sheet = not_founded_sheet
+            else: 
+                print('Error', not_founded_sheet)
+        else:
+            sheet = inventories[sheetIndex]
+
+        # Логика обработки изменений
+        if update.get('writeOff'):
+            print(f"Списание актива с ID: {sheetIndex}-{itemIndex}")
+            sheet.items[itemIndex].write_off(MTS, db)
+        if update.get('putOnBalance'):
+            print(f"Постановка на учет актива с ID: {sheetIndex}-{itemIndex}")
+            sheet.items[itemIndex].put_on_balance(MTS, db)
+
     updates = request.get_json().get('updates', [])
     
     if updates:
@@ -218,27 +238,6 @@ def update_inventory():
         return jsonify({'success': True, 'message': 'Изменения успешно обработаны'})
     else:
         return jsonify({'success': False, 'message': 'Нет данных для обработки'}), 400
-
-def process_update(update, inventories, not_founded_sheet):
-    sheetIndex = int(update['sheetIndex'])
-    itemIndex = int(update['itemIndex'])
-    
-    sheet = None
-    if sheetIndex >= len(inventories):
-        if not_founded_sheet:
-            sheet = not_founded_sheet
-        else: 
-            print('Error', not_founded_sheet)
-    else:
-        sheet = inventories[sheetIndex]
-
-    # Логика обработки изменений
-    if update.get('writeOff'):
-        print(f"Списание актива с ID: {sheetIndex}-{itemIndex}")
-        sheet.items[itemIndex].write_off(MTS, db)
-    if update.get('putOnBalance'):
-        print(f"Постановка на учет актива с ID: {sheetIndex}-{itemIndex}")
-        sheet.items[itemIndex].put_on_balance(MTS, db)
 
 @bp.route('/fetch/fetch-from-db', methods=['GET'])
 def fetch_from_db():
