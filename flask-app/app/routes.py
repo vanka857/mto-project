@@ -10,9 +10,9 @@ from .forms import SearchForm
 from .source.data import InventoryItem, InventorySheet, BasicSheet, Column
 
 
-
 bp = Blueprint('main', __name__)
 app_title = 'Материально-техническое обеспечение 0.1.1'
+
 
 @bp.route('/')
 def home_page():
@@ -39,8 +39,6 @@ def navigator_page():
 
 @bp.route('/navigator/search', methods=['POST'])
 def search():
-
-
     form = SearchForm()
 
     # Получаем список уникальных фамилий ответственных и названий помещений
@@ -131,7 +129,7 @@ def search():
 
     return return_data_as_dict([sheet], 'success', f'Найдено {len(sheet.items)} резальтатов!')
 
-@bp.route('/upload', methods=['POST'])
+@bp.route('/fetch/upload', methods=['POST'])
 def upload():
     file = request.files['file']
     if file and (file.filename.endswith('.xls') or file.filename.endswith('.xlsx')):
@@ -176,7 +174,7 @@ search_columns_to_show = [
     Column('latest_movement_date_time', 'Дата перемещения в помещение'),
 ]
 
-@bp.route('/read', methods=['GET'])
+@bp.route('/fetch/read', methods=['GET'])
 def read():
     filepath = session.get('file_path')
     if filepath:
@@ -208,7 +206,7 @@ def return_data_as_dict(data, status=None, message=None):
     sheets_data = [sheet.to_dict() for sheet in data]
     return jsonify({'status': status, 'message': message, 'inventories': sheets_data})
 
-@bp.route('/update-inventory', methods=['POST'])
+@bp.route('/fetch/update-inventory', methods=['POST'])
 def update_inventory():
     updates = request.get_json().get('updates', [])
     
@@ -242,7 +240,7 @@ def process_update(update, inventories, not_founded_sheet):
         print(f"Постановка на учет актива с ID: {sheetIndex}-{itemIndex}")
         sheet.items[itemIndex].put_on_balance(MTS, db)
 
-@bp.route('/fetch-from-db', methods=['GET'])
+@bp.route('/fetch/fetch-from-db', methods=['GET'])
 def fetch_from_db():
     inventories = session.get('inventories')
 

@@ -18,7 +18,7 @@ async function uploadFile() {
     formData.append('file', file);
 
     try {
-        const response = await fetch('/upload', {
+        const response = await fetch('/fetch/upload', {
             method: 'POST',
             body: formData,
         });
@@ -32,7 +32,7 @@ async function uploadFile() {
 
 function readFile() {
     showLoading();
-    fetch('/read').then(response => response.json()).then(data => {
+    fetch('/fetch/read').then(response => response.json()).then(data => {
         updateDataPage(data);
         document.getElementById('fetch-from-db-button').disabled = false;
         hideLoading();
@@ -75,7 +75,7 @@ function createSheet(sheet_data, sheet_index, container) {
 }
 
 function fetchFromDB() {
-    fetch('/fetch-from-db')
+    fetch('/fetch/fetch-from-db')
     .then(response => response.json())
     .then(data => {
         db_connected = true;
@@ -104,7 +104,7 @@ function sendUpdates() {
 
 // Функция отправки изменений на сервер
 function submitChanges(updates) {
-    fetch('/update-inventory', {
+    fetch('/fetch/update-inventory', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
