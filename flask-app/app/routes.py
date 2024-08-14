@@ -7,7 +7,7 @@ from sqlalchemy import func
 from .utils import read_excel_file
 from .models import db, MTS, Room, Staff, Movement, Appointment
 from .forms import SearchForm
-from .source.data import InventoryItem, InventorySheet, Column
+from .source.data import InventoryItem, InventorySheet, BasicSheet, Column
 
 
 
@@ -23,8 +23,24 @@ def home_page():
 def fetch_page():
     return render_template('fetch.html', app_title=app_title, page_title='внесение данных')
 
-@bp.route('/navigator', methods = ['GET', 'POST'])
+@bp.route('/navigator', methods=['GET', 'POST'])
 def navigator_page():
+    form = SearchForm()
+
+    # Заполнение списка выборов
+    form.responsible.choices = [('', 'Не выбрано')] + [
+        (s.surname, s.surname) for s in db.session.query(Staff.surname).distinct().order_by(Staff.surname)
+    ]
+    form.location.choices = [('', 'Не выбрано')] + [
+        (r.name_, r.name_) for r in db.session.query(Room.name_).distinct().order_by(Room.name_)
+    ]
+
+    return render_template('navigator.html', app_title="Поиск", page_title="Поиск", form=form)
+
+@bp.route('/navigator/search', methods=['POST'])
+def search():
+
+
     form = SearchForm()
 
     # Получаем список уникальных фамилий ответственных и названий помещений
@@ -72,11 +88,16 @@ def navigator_page():
         if query:
             filters.append((MTS.item_name.ilike(f'{query}%')) | (MTS.inventory_number.ilike(f'{query}%')))
 
+        responsible_surname_label = 'responsible_surname'
+        latest_appointment_date_time_label = 'latest_appointment_date_time'
+        room_name_label = 'room_name'
+        latest_movement_date_time_label = 'latest_movement_date_time'
+
         results = db.session.query(MTS, 
-                                   Staff.surname.label('responsible_surname'),
-                                   latest_appointment.date_time.label('latest_appointment_date_time'),
-                                   Room.name_.label('room_name'),
-                                   latest_movement.date_time.label('latest_movement_date_time')
+                                   Staff.surname.label(responsible_surname_label),
+                                   latest_appointment.date_time.label(latest_appointment_date_time_label),
+                                   Room.name_.label(room_name_label),
+                                   latest_movement.date_time.label(latest_movement_date_time_label)
         ).join(
             appointment_subquery,
             appointment_subquery.c.mts_id == MTS.id
@@ -97,9 +118,18 @@ def navigator_page():
         ).join(
             Room,
             Room.id == latest_movement.room_id
-        ).filter(*filters).all()
+        ).filter(*filters
+        ).order_by(Staff.surname, Room.name_).all()
 
-    return render_template('navigator.html', app_title=app_title, page_title='поиск', form=form, results=results)
+        sheet = BasicSheet(columns=search_columns_to_show)
+        for result in results:
+            enriched_data_dict = {responsible_surname_label: result[1],
+                                  latest_appointment_date_time_label: result[2].strftime('%Y-%m-%d %H:%M:%S'),
+                                  room_name_label: result[3],
+                                  latest_movement_date_time_label: result[4].strftime('%Y-%m-%d %H:%M:%S')}
+            sheet.add_item(InventoryItem(mts_object=result[0], enriched_data_dict=enriched_data_dict))
+
+    return return_data_as_dict([sheet], 'success', f'Найдено {len(sheet.items)} резальтатов!')
 
 @bp.route('/upload', methods=['POST'])
 def upload():
@@ -130,6 +160,20 @@ inventory_columns_to_show = [
     Column('registration_doc_no', 'Документ постановки на учет'),
     Column('write_off_date', 'Дата списания'),
     Column('write_off_doc_no', 'Документ списания'),
+]
+
+search_columns_to_show = [
+    Column('number_mts', 'Номер в базе'),
+    Column('inventory_number', 'Инвентарный номер'),
+    Column('item_name', 'Наименование'),
+    Column('unit_of_measure', 'Единица измерения'),
+    Column('volume', 'Количество'),
+    Column('registration_date', 'Дата постановки на учет'),
+    Column('registration_doc_no', 'Документ постановки на учет'),
+    Column('responsible_surname', 'Ответственный'),
+    Column('latest_appointment_date_time', 'Дата назначения ответственного'),
+    Column('room_name', 'Помещение'),
+    Column('latest_movement_date_time', 'Дата перемещения в помещение'),
 ]
 
 @bp.route('/read', methods=['GET'])

@@ -73,10 +73,11 @@ class InventoryItemData:
 
 
 class InventoryItem:
-    def __init__(self, excel_object=None, mts_object=None, parent_inventory=None):
+    def __init__(self, excel_object=None, mts_object=None, parent_inventory=None, enriched_data_dict=None):
         self.excel_data = InventoryItemData.from_excel(excel_object) if excel_object else None
         self.mts_data = InventoryItemData.from_mts(mts_object) if mts_object else None
         self.parent_inventory = parent_inventory
+        self.enriched_data_dict = enriched_data_dict
 
     def add_mts_data(self, mts_object):
         self.mts_data = InventoryItemData.from_mts(mts_object)
@@ -113,6 +114,7 @@ class InventoryItem:
         return {
             "excel_data": self.excel_data.to_dict() if self.excel_data else {},
             "mts_data": self.mts_data.to_dict() if self.mts_data else {},
+            "enriched_data": self.enriched_data_dict
         }
     
 
@@ -130,6 +132,7 @@ class BasicSheet:
             "items": [item.to_dict() for item in self.items]
         }
 
+
 class InventorySheet(BasicSheet):
     def __init__(self, columns=None, date=None, number=None, name=None):
         super().__init__(columns)  # Исправлено: вызов конструктора базового класса
@@ -146,6 +149,7 @@ class InventorySheet(BasicSheet):
             "number": self.number
         })
         return base_dict
+
 
 class Column:
     def __init__(self, id, label) -> None:

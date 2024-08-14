@@ -46,6 +46,7 @@ class BasicRow {
     constructor(data, id, column_ids) {
         this.excel_data = data.excel_data;
         this.mts_data = data.mts_data;
+        this.enriched_data = data.enriched_data;
 
         this.excelExists = !is_empty(data.excel_data);
         this.mtsExists = !is_empty(data.mts_data);
@@ -78,8 +79,12 @@ class BasicRow {
     }
 
     makeTextForCell(key) {
-        const [excelValue, mtsValue] = this.getSourceDataValue(key);
+        const [excelValue, mtsValue, enriched_value] = this.getSourceDataValue(key);
         const state = this.getRowState();
+
+        if (!excelValue && !mtsValue && enriched_value) {
+            return this.makeCellSpan('mts-data', enriched_value);
+        }
     
         if (state === 'mts-only') {
             return this.makeCellSpan('mts-data', mtsValue);
@@ -118,11 +123,12 @@ class BasicRow {
 
     getSourceDataValue(key) {
         // Получаем значения по ключу из обоих словарей, если значение отсутствует, присваиваем пустую строку
-        const excelValue = this.excel_data.hasOwnProperty(key) ? this.excel_data[key] : null;
-        const mtsValue = this.mts_data.hasOwnProperty(key) ? this.mts_data[key] : null;
-    
+        const excelValue = this.excel_data && this.excel_data.hasOwnProperty(key) ? this.excel_data[key] : null;
+        const mtsValue = this.mts_data && this.mts_data.hasOwnProperty(key) ? this.mts_data[key] : null;
+        const enriched_data = this.enriched_data && this.enriched_data.hasOwnProperty(key) ? this.enriched_data[key] : null;
+
         // Возвращаем пару значений
-        return [excelValue, mtsValue];
+        return [excelValue, mtsValue, enriched_data];
     }
 
     getRowState() {

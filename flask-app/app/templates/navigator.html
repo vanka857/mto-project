@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="container">
-    <form method="POST">
+    <form id="search-form">
         {{ form.csrf_token }}
         <div class="navigator-filter">
             <label for="responsible">Ответственный</label>
@@ -20,60 +20,9 @@
             {{ form.submit }}
         </div>
     </form>
-
-    {% if results %}
-        <h2>Результаты поиска</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Название</th>
-                    <th>Инвентарный номер</th>
-                    <th>Ответственный</th>
-                    <th>Последнее назначение</th>
-                    <th>Последнее перемещение</th>
-                    <th>Текущее помещение</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in results %}
-                    <tr>
-                        <td>{{ item.MTS.item_name }}</td>
-                        <td>{{ item.MTS.inventory_number }}</td>
-                        <td>
-                            {% if item.responsible_surname %}
-                                {{ item.responsible_surname }}
-                            {% else %}
-                                Не назначен
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if item.latest_appointment_date_time %}
-                                {{ item.latest_appointment_date_time.strftime('%Y-%m-%d %H:%M:%S') }}<br>
-                            {% else %}
-                                Нет данных
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if item.room_name %}
-                                {{ item.room_name }}
-                            {% else %}
-                                Не известно
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if item.latest_movement_date_time %}
-                                {{ item.latest_movement_date_time.strftime('%Y-%m-%d %H:%M:%S') }}
-                            {% else %}
-                                Нет данных
-                            {% endif %}
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% elif form.is_submitted() %}
-        <p>По вашему запросу ничего не найдено.</p>
-    {% endif %}
+    <div id="search-results-container"></div>
 </div>
+<script src="{{ url_for('static', filename='js/common.js') }}"></script>
 <script src="{{ url_for('static', filename='js/navigator.js') }}"></script>
+<script src="{{ url_for('static', filename='js/table.js') }}"></script>
 {% endblock %}
