@@ -7,7 +7,7 @@ from sqlalchemy import func
 from .utils import read_excel_file
 from .models import db, MTS, Room, Staff, Movement, Appointment
 from .forms import SearchForm
-from .source.data import InventoryItem, InventorySheet
+from .source.data import InventoryItem, InventorySheet, Column
 
 
 
@@ -118,6 +118,20 @@ def upload():
         return jsonify({'filename': filename})
     return jsonify({'error': 'Invalid file type'}), 400
 
+inventory_columns_to_show = [
+    Column('number_excel', 'Номер в ведомости'),
+    Column('number_mts', 'Номер в базе'),
+    Column('inventory_number', 'Инвентарный номер'),
+    Column('item_name', 'Наименование'),
+    Column('unit_of_measure', 'Единица измерения'),
+    Column('volume', 'Количество'),
+    Column('price', 'Стоимость'),
+    Column('registration_date', 'Дата постановки на учет'),
+    Column('registration_doc_no', 'Документ постановки на учет'),
+    Column('write_off_date', 'Дата списания'),
+    Column('write_off_doc_no', 'Документ списания'),
+]
+
 @bp.route('/read', methods=['GET'])
 def read():
     filepath = session.get('file_path')
@@ -129,7 +143,8 @@ def read():
         for inventory_excel_row_data in inventories_excel_row_data:
             inventory = InventorySheet(
                 date=datetime.strptime(inventory_excel_row_data['date'], "%d.%m.%Y").date(),
-                number=inventory_excel_row_data['number'])
+                number=inventory_excel_row_data['number'],
+                columns=inventory_columns_to_show)
             
             for inventory_item_excel_data in inventory_excel_row_data['items']:
                 inventory.add_item(InventoryItem(
@@ -210,7 +225,8 @@ def fetch_from_db():
         .filter(MTS.inventory_number.notin_(founded_inv_numbers), MTS.written_off == False) \
         .order_by(MTS.item_name).all()
     
-    not_founded_sheet = InventorySheet(name='Не найденное')
+    not_founded_sheet = InventorySheet(name='Не найденное',
+                                       columns=inventory_columns_to_show)
 
     for not_founded_item in not_founded_items:
         not_founded_sheet.add_item(

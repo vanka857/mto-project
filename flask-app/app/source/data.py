@@ -5,7 +5,7 @@ class InventoryItemData:
     def __init__(self, item_name=None, inventory_number=None, unit_of_measure=None, 
                  volume=None, price=None, end_of_life=None, registration_date=None, 
                  revaluation_date=None, written_off=None, write_off_date=None, registration_doc_no=None, 
-                 revaluation_doc_no=None, write_off_doc_no=None, number=None):
+                 revaluation_doc_no=None, write_off_doc_no=None, number_excel=None, number_mts=None):
         self.item_name = item_name
         self.inventory_number = inventory_number
         self.unit_of_measure = unit_of_measure
@@ -19,7 +19,8 @@ class InventoryItemData:
         self.registration_doc_no = registration_doc_no
         self.revaluation_doc_no = revaluation_doc_no
         self.write_off_doc_no = write_off_doc_no
-        self.number = number
+        self.number_excel = number_excel
+        self.number_mts = number_mts
 
     def to_dict(self):
         return {
@@ -36,7 +37,8 @@ class InventoryItemData:
             "registration_doc_no": self.registration_doc_no,
             "revaluation_doc_no": self.revaluation_doc_no,
             "write_off_doc_no": self.write_off_doc_no,
-            "number": self.number
+            "number_excel": self.number_excel,
+            "number_mts": self.number_mts
         }
 
     @staticmethod
@@ -47,7 +49,7 @@ class InventoryItemData:
             unit_of_measure=excel_object['Measure'],
             volume=excel_object['Volume'],
             price=excel_object['Price'],
-            number=excel_object['Number']
+            number_excel=excel_object['Number']
         )
 
     @staticmethod
@@ -66,7 +68,7 @@ class InventoryItemData:
             registration_doc_no=mts_object.registration_doc_no,
             revaluation_doc_no=mts_object.revaluation_doc_no,
             write_off_doc_no=mts_object.write_off_doc_no,
-            number=mts_object.id
+            number_mts=mts_object.id
         )
 
 
@@ -84,7 +86,7 @@ class InventoryItem:
 
     def write_off(self, MTS, db, doc_no=None, date=None):
         if self.mts_data:
-            mts_entry = MTS.query.get(self.mts_data.number)
+            mts_entry = MTS.query.get(self.mts_data.number_mts)
             if mts_entry:
                 if doc_no:
                     mts_entry.write_off_doc_no = doc_no
@@ -114,20 +116,44 @@ class InventoryItem:
         }
     
 
-class InventorySheet:
-    def __init__(self, date=None, number=None, name=None):
+class BasicSheet:
+    def __init__(self, columns=None):
+        self.columns = columns
         self.items = []  # Список элементов InventoryItem
-        self.date = date
-        self.number = number
-        self.name = name
 
     def add_item(self, item):
         self.items.append(item)
 
     def to_dict(self):
         return {
-            "name": self.name,
-            "date": self.date.strftime('%Y-%m-%d') if self.date else None, 
-            "number": self.number,
+            "columns": [column.to_dict() for column in self.columns],  # Преобразуем каждый объект Column в словарь
             "items": [item.to_dict() for item in self.items]
+        }
+
+class InventorySheet(BasicSheet):
+    def __init__(self, columns=None, date=None, number=None, name=None):
+        super().__init__(columns)  # Исправлено: вызов конструктора базового класса
+
+        self.date = date
+        self.number = number
+        self.name = name
+
+    def to_dict(self):
+        base_dict = super().to_dict()  # Исправлено: корректный вызов метода базового класса
+        base_dict.update({  # Используем метод `update` для добавления данных
+            "name": self.name,
+            "date": self.date.strftime('%Y-%m-%d') if self.date else None,
+            "number": self.number
+        })
+        return base_dict
+
+class Column:
+    def __init__(self, id, label) -> None:
+        self.id = id
+        self.label = label
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "label": self.label
         }

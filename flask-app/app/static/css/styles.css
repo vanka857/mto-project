@@ -122,17 +122,9 @@ select:focus {
     text-align: left;
 }
 
-.excel-row {
-    background-color: #f9f9f9;
-}
-
-.mts-row {
-    background-color: #e2edc5;
-}
-
 /* Стиль для подписи, когда чекбокс неактивен */
-input[type="checkbox"]:disabled + label {
-    color: lightgrey;
+.inventory-table input[type="checkbox"]:disabled + label {
+    color: rgb(169, 169, 169);
 }
 
 .file-upload {
@@ -147,17 +139,6 @@ input[type="checkbox"]:disabled + label {
     text-align: center;
     margin-bottom: 20px;
 }
-
-/* input[type="file"]{
-    background-color: #007BFF;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    margin: 10px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-} */
 
 button, input[type=file]::file-selector-button, input[type=submit]{
     background-color: #007BFF;
@@ -193,7 +174,37 @@ button:disabled, input[type=file]::file-selector-button:disabled ,  input[type=s
     background-color: #007BFF;
     color: white;
 }
+ 
+.inventory-table tr.mts-only {
+    background-color: rgb(203, 229, 237);
+}
 
-.status-cell {
+.inventory-table tr.excel-only {
+    background-color: rgb(196, 250, 196);
+}
+
+.inventory-table tr.both {
+    background-color: rgb(226, 226, 226);
+}
+
+/* Стиль для данных из MTS */
+.inventory-table .mts-data {
+    color: blue;
+}
+
+/* Стиль для данных из Excel */
+.inventory-table .excel-data {
+    color: green;
+}
+
+/* Стиль для данных, если они совпадают в excel и в mts */
+.inventory-table .both-data {
+    color: rgb(0, 0, 0);
+}
+
+/* Стиль для расхождений */
+.inventory-table .discrepancy {
+    color: red;
+    font-size: large;
     font-weight: bold;
 }
