@@ -62,7 +62,7 @@ def navigator():
         (r.name_, r.name_) for r in db.session.query(Room.name_).distinct().order_by(Room.name_)
     ]
 
-    return render_template('navigator.html', app_title="Поиск", page_title="Поиск", form=form)
+    return render_template('navigator.html', app_title=app_title, page_title="поиск", form=form)
 
 @bp.route('/navigator/search', methods=['POST'])
 def search():
