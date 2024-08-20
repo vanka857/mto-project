@@ -5,6 +5,10 @@ body, html {
     background-color: #f4f4f4;
 }
 
+body.modal-open {
+    overflow: hidden; /* Отключаем прокрутку основной страницы при открытом модальном окне */
+}
+
 header {
     background-color: #007BFF; /* Синий фон */
     color: white; /* Белый цвет текста */
@@ -230,6 +234,8 @@ button:disabled, input[type=file]::file-selector-button:disabled ,  input[type=s
     position: relative;
     top: 50%;
     transform: translateY(-50%);
+    max-width: 960px;
+    overflow-y: auto; /* Включаем прокрутку внутри модального окна */
 }
 
 #card-modal-close {
@@ -240,3 +246,116 @@ button:disabled, input[type=file]::file-selector-button:disabled ,  input[type=s
     color: #007BFF;
     cursor: pointer;
 }
+
+#card-header {
+    font-size: 1.5em;
+    padding: 15px;
+    width: 100%;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#card-header #inv-number {
+    color: gray;
+    margin-right: 30px;
+}
+
+#card-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#card-table th {
+    text-align: center;
+    font-size: large;
+}
+
+#card-table th, td {
+    padding: 3px;
+    /* border: 1px solid #ddd; */
+    vertical-align: top;
+}
+
+#card-table .data-cell {
+    position: relative;
+    width: 45%;
+    padding-bottom: 5px;
+}
+
+#card-table .excel-cell {
+    color: green;
+}
+
+#card-table .mts-cell {
+    color: blue;
+}
+
+#card-table .data-label {
+    display: inline-block;
+    padding: 5px;
+    margin-right: 10px;
+    margin-left: 5px;
+    color: gray;
+    font-size: small;
+}
+
+#card-table .edit-btn {
+    padding: 5px 10px;
+    margin: 0;
+    font-size: 1em;
+    float:right;
+}
+
+#card-table .edit-btn-active {
+    background-color: #bd0000;
+}
+
+#card-table .edit-btn-active:hover {
+    background-color: #830000;
+}
+
+#card-table .excel-cell .edit-btn {
+    display: none;
+}
+
+#card-table.hide1-2 *.excel-cell,
+#card-table.hide1-2 *.error-cell {
+    display: none;
+}
+#card-table.hide1-2 *.mts-cell {
+    width: 80%;
+}
+
+#card-table.hide2-3 *.mts-cell,
+#card-table.hide2-3 *.error-cell {
+    display: none;
+}
+#card-table.hide2-3 *.excel-cell {
+    width: 80%;
+}
+
+#card-table .data-display {
+    display: block;
+    max-width: calc(100% - 20px);
+    border: 2px solid lightgrey;
+    border-radius: 5px;
+    margin-top: 5px;
+    padding: 8px;
+    min-height: 1.2em;
+    overflow-y: auto;
+    word-wrap: break-word;
+    word-break: break-word;
+}
+
+#card-table .data-display-editable{
+    border: 2px solid gray;
+}
+
+#card-table .data-display-editable:focus{
+    border: 2px solid blue;
+}
+
+#card-table .error-cell {
+    color: red;
+    text-align: center;
+}     

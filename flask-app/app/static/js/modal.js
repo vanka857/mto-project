@@ -14,23 +14,29 @@ function setModalContent(innerHTML) {
 
 function showModal() {
     modal.style.display = "block";
+    document.body.classList.add('modal-open');
+}
+
+function closeModal() {
+    modal.style.display = "none";
+    document.body.classList.remove('modal-open');
 }
 
 // Когда пользователь нажимает на <span> (x), закрыть окно
 span.onclick = function() {
-    modal.style.display = "none";
+    closeModal();
 }
 
 // Когда пользователь нажимает в любом месте за пределами модального окна, закрыть его
 window.onclick = function(event) {
     if (event.target == modal) {
-        modal.style.display = "none";
+        closeModal();
     }
 }
 
 // Когда пользователь нажимает клавишу Escape, закрыть окно
 document.onkeydown = function(event) {
     if (event.key === "Escape") {
-        modal.style.display = "none";
+        closeModal();
     }
 }

@@ -43,22 +43,16 @@ class Checkbox {
 
 // Базовый класс строки таблицы
 class BasicRow {
-    constructor(data, id, column_ids) {
-        this.excel_data = data.excel_data;
-        this.mts_data = data.mts_data;
-        this.enriched_data = data.enriched_data;
-
-        this.excelExists = !is_empty(data.excel_data);
-        this.mtsExists = !is_empty(data.mts_data);
+    constructor(data, id, column_ids, column_dict) {
+        this.data = new ItemData(data, column_ids, column_dict);
 
         this.id = id;
-        this.column_ids = column_ids;
     }
 
     render(additional_cells) {
         const row = document.createElement('tr');
         
-        this.column_ids.forEach(key => {
+        this.data.visible_keys.forEach(key => {
             const cell = document.createElement('td');
             cell.innerHTML = this.makeTextForCell(key);
             row.appendChild(cell);
@@ -70,18 +64,20 @@ class BasicRow {
             });    
         }
 
-        row.addEventListener('click', function(event) {
-
+        row.addEventListener('click', (event) => {
             // Проверка, не был ли клик по элементу, который уже имеет свой обработчик
             if (!event.target.closest('.actionable')) {
                 event.preventDefault();
-
-                setModalContent('ee');
-                showModal();
+                openCardModal(this.data, this.id, this.data.visible_keys, 
+                    {label: 'Отправить изменения', func: this.sendUpdates});
             }
         });
 
         return row;
+    }
+
+    sendUpdates() {
+        // TODO
     }
 
     makeCellSpan(class_name, value) {
@@ -90,8 +86,8 @@ class BasicRow {
     }
 
     makeTextForCell(key) {
-        const [excelValue, mtsValue, enriched_value] = this.getSourceDataValue(key);
-        const state = this.getRowState();
+        const [excelValue, mtsValue, enriched_value] = this.data.getSourceDataValue(key);
+        const state = this.data.getDataState();
 
         if (!excelValue && !mtsValue && enriched_value) {
             return this.makeCellSpan('mts-data', enriched_value);
@@ -125,38 +121,12 @@ class BasicRow {
             }
         }
     }    
-
-    getSourceData() {
-        if (this.excelExists) return this.excel_data;
-        else if (this.mtsExists) return this.mts_data;
-        else return {};
-    }
-
-    getSourceDataValue(key) {
-        // Получаем значения по ключу из обоих словарей, если значение отсутствует, присваиваем пустую строку
-        const excelValue = this.excel_data && this.excel_data.hasOwnProperty(key) ? this.excel_data[key] : null;
-        const mtsValue = this.mts_data && this.mts_data.hasOwnProperty(key) ? this.mts_data[key] : null;
-        const enriched_data = this.enriched_data && this.enriched_data.hasOwnProperty(key) ? this.enriched_data[key] : null;
-
-        // Возвращаем пару значений
-        return [excelValue, mtsValue, enriched_data];
-    }
-
-    getRowState() {
-        if (this.mtsExists && !this.excelExists) {
-            return 'mts-only';
-        } else if (!this.mtsExists && this.excelExists) {
-            return 'excel-only';
-        } else if (this.mtsExists && this.excelExists) {
-            return 'both';
-        }
-    }
 }
 
 // Класс строки с действиями (чекбоксами)
 class ActionableRow extends BasicRow {
-    constructor(data, id, column_ids) {
-        super(data, id, column_ids);
+    constructor(data, id, column_ids, column_dict) {
+        super(data, id, column_ids, column_dict);
 
         // Инициализация чекбоксов как объектов класса
         this.writeOffCheckbox = new Checkbox(this.id, 'write-off', 'Списать', this);
@@ -176,7 +146,7 @@ class ActionableRow extends BasicRow {
         this.updateItemState();
 
         // Обновление стиля
-        row.classList.add(this.getRowState());
+        row.classList.add(this.data.getDataState());
 
         return row;
     }
@@ -197,11 +167,14 @@ class ActionableRow extends BasicRow {
     }
 
     getStatusText() {
-        if (this.mtsExists && this.excelExists) {
+        const mtsExists = this.data.mtsExists;
+        const excelExists = this.data.excelExists;
+
+        if (mtsExists && excelExists) {
             return 'В наличии';
-        } else if (!this.mtsExists && this.excelExists) {
+        } else if (!mtsExists && excelExists) {
             return 'Новое';
-        } else if (this.mtsExists && !this.excelExists) {
+        } else if (mtsExists && !excelExists) {
             return 'Можно списать';
         }
     }
@@ -219,10 +192,13 @@ class ActionableRow extends BasicRow {
         const state = this.getCheckboxState();
         const statusCell = this.statusCell;
 
-        // Логика обновления статуса и управления чекбоксами
-        if (this.mtsExists) this.inStockCheckbox.enable();
+        const mtsExists = this.data.mtsExists;
+        const excelExists = this.data.excelExists;
 
-        if (this.mtsExists && this.excelExists) {
+        // Логика обновления статуса и управления чекбоксами
+        if (mtsExists) this.inStockCheckbox.enable();
+
+        if (mtsExists && excelExists) {
             if (!state.inStockChecked) {
                 statusCell.textContent = 'Утеряно';
                 statusCell.style.color = 'red';
@@ -230,7 +206,7 @@ class ActionableRow extends BasicRow {
                 statusCell.textContent = 'В наличии';
                 statusCell.style.color = 'grey';
             }
-        } else if (!this.mtsExists && this.excelExists) {
+        } else if (!mtsExists && excelExists) {
             if (db_connected) this.putOnBalanceCheckbox.enable();
             if (!state.putOnBalanceChecked) {
                 statusCell.textContent = 'Новое';
@@ -239,7 +215,7 @@ class ActionableRow extends BasicRow {
                 statusCell.textContent = 'Будет поставлено на учет';
                 statusCell.style.color = 'blue';
             }
-        } else if (this.mtsExists && !this.excelExists) {
+        } else if (mtsExists && !excelExists) {
             if (!state.inStockChecked) {
                 statusCell.textContent = state.writeOffChecked ? 'Будет списано как утраченное' : 'Можно списать как утраченное';
                 statusCell.style.color = state.writeOffChecked ? 'orange' : 'red';
@@ -258,15 +234,16 @@ class Table {
         this.sheet_items = sheet_items;
         this.sheet_index = sheet_index;
         this.class_name = class_name;
-        this.columns = columns;
         this.actionable = actionable;
         this.column_ids = columns.map(column => column.id);  // Сохраняем все id в отдельный список
+        this.column_dict = {};
+        columns.map(column => this.column_dict[column.id] = column.label);
 
         this.rows = [];
 
         sheet_items.forEach((row_data, index) => {
             let row;
-            row = this.actionable ? new ActionableRow(row_data, index, this.column_ids) : new BasicRow(row_data, index, this.column_ids);
+            row = this.actionable ? new ActionableRow(row_data, index, this.column_ids, this.column_dict) : new BasicRow(row_data, index, this.column_ids, this.column_dict);
             this.rows.push(row);
         });
         
@@ -289,9 +266,9 @@ class Table {
         const thead = document.createElement('thead');
         const headerRow = document.createElement('tr');
 
-        this.columns.forEach(column => {
+        this.column_ids.forEach(column_id => {
             const th = document.createElement('th');
-            th.textContent = column.label;
+            th.textContent = this.column_dict[column_id];
             headerRow.appendChild(th);
         });
 
