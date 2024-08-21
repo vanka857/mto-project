@@ -1,4 +1,8 @@
+// Файл со скриптами для страницы поиска
+
+
 document.addEventListener('DOMContentLoaded', function() {
+    // form — форма поиска, добавление которой находится в html
     const form = document.getElementById('search-form');
     const resultsContainer = document.getElementById('search-results-container');
 
@@ -7,6 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const formData = new FormData(form);
 
+        // Запрос на сервер для поиска
         fetch('/navigator/search', {
             method: 'POST',
             body: formData

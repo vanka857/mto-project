@@ -1,7 +1,12 @@
+// Файл со скриптами для страницы внесения данных (fetch)
+
+// Храним статус наличия активного подключения к 
 let db_connected = false;
+
+// Храним выводимые на странице таблицы
 let data_tables = [];
 
-// Вспомогательные функции для управления видимостью элементов
+// Вспомогательные функции для управления видимостью лоадера
 function showLoading() {
     document.getElementById('loading').style.display = '';
 }
@@ -10,19 +15,23 @@ function hideLoading() {
     document.getElementById('loading').style.display = 'none';
 }
 
-// Функции для работы с файлами и загрузки данных
+// Функция для работы с файлами и загрузки данных
 async function uploadFile() {
+    // получение файла из инпута
     const fileInput = document.getElementById('file-input');
     const file = fileInput.files[0];
     const formData = new FormData();
     formData.append('file', file);
 
+    // отправка файла на сервер
     try {
         const response = await fetch('/fetch/upload', {
             method: 'POST',
             body: formData,
         });
         const data = await response.json();
+
+        // вывод результата отправки в интерфейсе
         document.getElementById('file-name').textContent = `Uploaded: ${data.filename}`;
         document.getElementById('read-file-button').disabled = false;
     } catch (error) {
@@ -30,8 +39,11 @@ async function uploadFile() {
     }
 }
 
+// функция для обработки файла на сервере и получения обработанного ответа
 function readFile() {
+    // показываем лоадер
     showLoading();
+    // отправляем зарпос на сервер для обработки файла
     fetch('/fetch/read').then(response => response.json()).then(data => {
         updateDataPage(data);
         document.getElementById('fetch-from-db-button').disabled = false;
@@ -42,6 +54,7 @@ function readFile() {
     });
 }
 
+// функция сброса состояния страницы
 function resetPage() {
     db_connected = false;
     document.getElementById('output').innerHTML = '';
@@ -50,6 +63,7 @@ function resetPage() {
     hideLoading();
 }
 
+// функция создания секции с таблицей
 function createSheet(sheet_data, sheet_index, container) {
     const section = document.createElement('div');
     section.className = 'inventory-section';
@@ -74,6 +88,7 @@ function createSheet(sheet_data, sheet_index, container) {
     container.appendChild(section);
 }
 
+// функция получения обогащенных данных (из ведомости + из базы) с сервера
 function fetchFromDB() {
     fetch('/fetch/fetch-from-db')
     .then(response => response.json())
@@ -124,7 +139,7 @@ function submitChanges(updates) {
     });
 }
 
-// Функции для обновления UI элементов
+// Функции для отрисовки UI страницы
 function updateDataPage(data) {
     data_tables = [];
 

@@ -1,4 +1,10 @@
+// Файл с классом, предназначенным для хранения данных о МТС
+
+
 class ItemData {
+    /*
+        Класс для хранения данных о МТС
+    */
     constructor(data, visible_keys, keys_dict) {
         this.excel_data = data.excel_data;
         this.mts_data = data.mts_data;
@@ -11,12 +17,7 @@ class ItemData {
         this.keys_dict = keys_dict;
     }
 
-    getSourceData() {
-        if (this.excelExists) return this.excel_data;
-        else if (this.mtsExists) return this.mts_data;
-        else return {};
-    }
-
+    // Метод, возвращающий данные по ключу из трех источников
     getSourceDataValue(key) {
         // Получаем значения по ключу из обоих словарей, если значение отсутствует, присваиваем пустую строку
         const excelValue = this.excel_data && this.excel_data.hasOwnProperty(key) ? this.excel_data[key] : null;
@@ -27,6 +28,7 @@ class ItemData {
         return [excelValue, mtsValue, enriched_data];
     }
 
+    // Метод, возвращающий состояние DataItem (по наличию данных в excel и базе)
     getDataState() {
         if (this.mtsExists && !this.excelExists) {
             return 'mts-only';

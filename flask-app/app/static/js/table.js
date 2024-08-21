@@ -1,5 +1,10 @@
-// Класс для работы с чекбоксами
+// Файл со скриптами для создания таблиц с данными
+
+
 class Checkbox {
+    /*
+        Класс для работы с чекбоксами на странице внесения данных
+    */
     constructor(id, type, label, row) {
         this.id = id;
         this.type = type;
@@ -17,18 +22,22 @@ class Checkbox {
         });
     }
 
+    // выключение чекбокса
     disable() {
         this.checkbox.disabled = true;
     }
 
+    // включение чекбокса
     enable() {
         this.checkbox.disabled = false;
     }
 
+    // получение состояния чекбокса
     isChecked() {
         return this.checkbox.checked;
     }
 
+    // отрисовка чекбокса
     render() {
         const labelElement = document.createElement('label');
         labelElement.textContent = this.label;
@@ -41,14 +50,18 @@ class Checkbox {
     }
 }
 
-// Базовый класс строки таблицы
+
 class BasicRow {
+    /*
+        Базовый класс строки с данными в таблице с данными
+    */
     constructor(data, id, column_ids, column_dict) {
         this.data = new ItemData(data, column_ids, column_dict);
         this.card = new Card(this.data, id);
         this.id = id;
     }
 
+    // Метод отрисовки
     render(additional_cells) {
         const row = document.createElement('tr');
         
@@ -73,7 +86,7 @@ class BasicRow {
                                         'card-modal-body', 
                                         'card-modal-close', 
                                         () => {
-                                            this.applyUpdates();
+                                            this.processUpdates();
                                         });
                 
                 this.card.setModal(modal);
@@ -84,18 +97,21 @@ class BasicRow {
         return row;
     }
 
-    applyUpdates() {
+    // Метод обработки обновлений в данных (при обновлении в модальном окне)
+    processUpdates() {
         const updates = this.card.getChanges();
         if (Object.keys(updates).length > 0) {
             console.log('Updates: ', this.card.getChanges());
         }
     }
 
+    // Метод создания надписи определенного CSS-класса
     makeCellSpan(class_name, value) {
         if (!value) return '';
         return `<span class="${class_name}">${value}</span>`
     }
 
+    // Метод создания текста для ячейки таблицы с данными
     makeTextForCell(key) {
         const [excelValue, mtsValue, enriched_value] = this.data.getSourceDataValue(key);
         const state = this.data.getDataState();
@@ -134,8 +150,11 @@ class BasicRow {
     }    
 }
 
-// Класс строки с действиями (чекбоксами)
+
 class ActionableRow extends BasicRow {
+    /*
+        Класс строки с действиями (чекбоксами) в таблице с данными
+    */
     constructor(data, id, column_ids, column_dict) {
         super(data, id, column_ids, column_dict);
 
@@ -145,6 +164,7 @@ class ActionableRow extends BasicRow {
         this.inStockCheckbox = new Checkbox(this.id, 'in-stock', 'Есть в наличии', this);
     }
 
+    // Метод отрисовки
     render() {
         // Добавление столбца со статусом
         this.statusCell = this.createStatusCell();
@@ -162,6 +182,7 @@ class ActionableRow extends BasicRow {
         return row;
     }
 
+    // Метод создания ячейки с чекбоксами
     createCheckboxCell() {
         const cell = document.createElement('td');
         cell.className = 'actionable';
@@ -171,25 +192,23 @@ class ActionableRow extends BasicRow {
         return cell;
     }
 
+    // Метод создания ячейки статуса
     createStatusCell() {
         const cell = document.createElement('td');
-        cell.textContent = this.getStatusText();
-        return cell;
-    }
-
-    getStatusText() {
         const mtsExists = this.data.mtsExists;
         const excelExists = this.data.excelExists;
 
         if (mtsExists && excelExists) {
-            return 'В наличии';
+            cell.textContent =  'В наличии';
         } else if (!mtsExists && excelExists) {
-            return 'Новое';
+            cell.textContent =  'Новое';
         } else if (mtsExists && !excelExists) {
-            return 'Можно списать';
+            cell.textContent =  'Можно списать';
         }
+        return cell;
     }
 
+    // Метод получения состояний чекбоксов
     getCheckboxState() {
         return {
             writeOffChecked: this.writeOffCheckbox.isChecked(),
@@ -198,7 +217,7 @@ class ActionableRow extends BasicRow {
         };
     }
 
-    // Метод обновления состояния строки
+    // Метод обновления состояния (статуса) строки на основе чекбоксов)
     updateItemState() {
         const state = this.getCheckboxState();
         const statusCell = this.statusCell;
@@ -239,8 +258,11 @@ class ActionableRow extends BasicRow {
     }
 }
 
-// Класс таблицы
+
 class Table {
+    /*
+        Класс для таблиц с данными
+    */
     constructor(sheet_items, sheet_index, class_name, columns, actionable) {
         this.sheet_items = sheet_items;
         this.sheet_index = sheet_index;
@@ -260,6 +282,7 @@ class Table {
         
     }
 
+    // Метод отрисовки
     render() {
         const table = document.createElement('table');
         table.className = this.class_name;
@@ -273,6 +296,7 @@ class Table {
         return table;
     }
 
+    // Метод создания заголовка таблицы
     createHeader() {
         const thead = document.createElement('thead');
         const headerRow = document.createElement('tr');
@@ -296,6 +320,7 @@ class Table {
         return thead;
     }
 
+    // Метод формирования массива желаемых обновлений (на основе чекбоксов)
     getUpdates() {
         return this.rows
             .filter(row => {
@@ -314,6 +339,7 @@ class Table {
     }
 }
 
+// Функция создания таблицы с данными
 function createTable(sheet_data, sheet_index, class_name, actionable){
     const table = new Table(sheet_data.items, sheet_index, class_name, sheet_data.columns, actionable);
     return [table.render(), table];

@@ -1,4 +1,10 @@
+// Файл для скриптов базового модального окна
+
+
 class Modal {
+    /* 
+        Класс для создания модальных окон
+    */
     constructor(modal_id, modal_body_id, modal_close_id, on_close_callback) {
         // Получаем модальное окно
         this.modal = document.getElementById(modal_id);
@@ -31,15 +37,18 @@ class Modal {
         }
     }
 
+    // Метод для установки содержимого модального окна
     setModalContent(innerHTML) {
         this.modal_body.innerHTML = innerHTML;
     }
     
+    // Метод, делающий модальное окно видимым
     showModal() {
         this.modal.style.display = "block";
         document.body.classList.add('modal-open');
     }
     
+    // Метод, закрывающий модальное окно (делающие его невидимым)
     closeModal() {
         this.modal.style.display = "none";
         document.body.classList.remove('modal-open');

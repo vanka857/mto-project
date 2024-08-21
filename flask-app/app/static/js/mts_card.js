@@ -1,7 +1,11 @@
-// здесь лежат функции, генерирующий контент, связанный с карточкой mts
+// Файл со скриптами, связанными с отображением карточки
 
 
 class Card {
+    /*
+        Класс для отрисовки и работы карточки МТС 
+        (рисуется внутри модального окна)
+    */
     constructor(item_data, id) {
         this.item_data = item_data;
         this.id = id;
@@ -33,6 +37,7 @@ class Card {
         this.modal = modal;
     }
 
+    // метод для отрисовки карточки МТС
     render() {
         const container =  `
             <div class="container">
@@ -72,46 +77,46 @@ class Card {
 
         const table_body = document.getElementById('card-table-body');
 
-        const edit_button_listener = (button) => {
-            const id = button.getAttribute('data-id');
-            const displayDiv = document.getElementById('mts-data-' + id);
-        
-            if (displayDiv.contentEditable === 'false') {
-                button.textContent = 'Сохранить';
-                button.classList.add('edit-btn-active');
-    
-                displayDiv.classList.add('data-display-editable');
-                displayDiv.contentEditable = 'true';
-            } else {
-                button.textContent = 'Изменить';
-                button.classList.remove('edit-btn-active');
-
-                displayDiv.classList.remove('data-display-editable');
-                displayDiv.contentEditable = 'false';
-
-                this.addChanges(id);
-                this.updateDiscrepancy(id);
-            }
-        };
-
+        // Структуры данных для кнопки редактирования
         const edit_button_data = {
             label: "Изменить",
-            func: edit_button_listener
+            func: (button) => {
+                const id = button.getAttribute('data-id');
+                const displayDiv = document.getElementById('mts-data-' + id);
+            
+                if (displayDiv.contentEditable === 'false') {
+                    button.textContent = 'Сохранить';
+                    button.classList.add('edit-btn-active');
+        
+                    displayDiv.classList.add('data-display-editable');
+                    displayDiv.contentEditable = 'true';
+                } else {
+                    button.textContent = 'Изменить';
+                    button.classList.remove('edit-btn-active');
+    
+                    displayDiv.classList.remove('data-display-editable');
+                    displayDiv.contentEditable = 'false';
+    
+                    this.addChanges(id);
+                    this.updateDiscrepancy(id);
+                }
+            }
         }
 
+        // Добавление строк с таблицу
         this.item_data.visible_keys.forEach(key_id => {
             let row;
             if (this.mts_visible.includes(key_id)) {
-                // создание строки с кнопкой редактирования
+                // Создание строки с кнопкой редактирования
                 row = this.getCardRow(key_id, this.item_data.keys_dict[key_id], edit_button_data);
             }
             else {
-                // создание строки без кнопок
+                // Создание строки без кнопок
                 row = this.getCardRow(key_id, this.item_data.keys_dict[key_id]);    
             }
             table_body.appendChild(row);    
              
-            // обработка проблемы со вставкой html-кода в contentEditable div
+            // Обработка проблемы со вставкой html-кода в contentEditable div
             var contentEditableNodes = document.querySelectorAll('.data-display');
             [].forEach.call(contentEditableNodes, function(div) {
                 div.addEventListener("input", 
@@ -127,12 +132,13 @@ class Card {
             this.updateDiscrepancy(key_id);
         });
 
+        // показ модального окна с контентом, если оно задано
         if (this.modal) {
             this.modal.showModal();
         }
     }
 
-    // функция, которая готовит строку в таблице на карточке Card
+    // меод, который готовит строку в таблице на карточке Card
     getCardRow(key_id, key_name, button_data) {
         const [excel_value, mts_value, enriched_value] = this.item_data.getSourceDataValue(key_id);
     
@@ -216,7 +222,7 @@ class Card {
         return row;
     }
 
-    // метод для обновления столбца с расхождениями в данных
+    // Метод для обновления столбца с расхождениями в данных
     updateDiscrepancy(key_id) {
         const mts_elem = document.getElementById('mts-data-' + key_id);
         const mts_value = mts_elem ? mts_elem.textContent : null;
