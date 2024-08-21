@@ -66,15 +66,6 @@ div.navigator-filter {
     margin: 10px;
 }
 
-/* Cтили для формы поиска */
-#search-form {
-    background: white;
-    padding: 20px;
-    border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
-}
-
 /* Стили для подписей формы поиска */
 #search-form label {
     display: block; /* Полный блочный элемент */
@@ -136,7 +127,6 @@ div.navigator-filter {
 
 /* Стиль для управляющих элементов на странице внесения данных */
 .controls {
-    text-align: center;
     background: white;
     padding: 20px;
     border-radius: 5px;
