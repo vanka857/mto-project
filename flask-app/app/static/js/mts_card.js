@@ -28,8 +28,8 @@ class Card {
                             'write_off_date', 
                             'write_off_doc_no'];
 
-        [, this.inventory_number, ] = this.item_data.getSourceDataValue('inventory_number');
-        [, this.item_name, ] = this.item_data.getSourceDataValue('item_name');
+        this.inventory_number = this.item_data.getSourceDataValueOne('inventory_number');
+        this.item_name = this.item_data.getSourceDataValueOne('item_name');
     }
 
     // передача экземпляра модального окна в объект класса

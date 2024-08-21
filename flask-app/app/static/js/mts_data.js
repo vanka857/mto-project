@@ -20,12 +20,21 @@ class ItemData {
     // Метод, возвращающий данные по ключу из трех источников
     getSourceDataValue(key) {
         // Получаем значения по ключу из обоих словарей, если значение отсутствует, присваиваем пустую строку
-        const excelValue = this.excel_data && this.excel_data.hasOwnProperty(key) ? this.excel_data[key] : null;
-        const mtsValue = this.mts_data && this.mts_data.hasOwnProperty(key) ? this.mts_data[key] : null;
-        const enriched_data = this.enriched_data && this.enriched_data.hasOwnProperty(key) ? this.enriched_data[key] : null;
+        const excel_value = this.excel_data && this.excel_data.hasOwnProperty(key) ? this.excel_data[key] : null;
+        const mts_value = this.mts_data && this.mts_data.hasOwnProperty(key) ? this.mts_data[key] : null;
+        const enriched_value = this.enriched_data && this.enriched_data.hasOwnProperty(key) ? this.enriched_data[key] : null;
 
         // Возвращаем пару значений
-        return [excelValue, mtsValue, enriched_data];
+        return [excel_value, mts_value, enriched_value];
+    }
+
+    // Метод, возвращающий данные по ключу из трех источников
+    getSourceDataValueOne(key) {
+        const [excel_value, mts_value, enriched_value] = this.getSourceDataValue(key);
+
+        if (excel_value) return excel_value;
+        if (mts_value) return mts_value;
+        return enriched_value;
     }
 
     // Метод, возвращающий состояние DataItem (по наличию данных в excel и базе)
