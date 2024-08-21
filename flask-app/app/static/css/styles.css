@@ -1,14 +1,17 @@
 body, html {
     font-family: 'Arial', sans-serif;
+    font-size: 14px;
     margin: 0;
     padding: 0;
     background-color: #f4f4f4;
 }
 
+/* Стили для страницы при открытом модальном окне */
 body.modal-open {
     overflow: hidden; /* Отключаем прокрутку основной страницы при открытом модальном окне */
 }
 
+/* Стили для заголовка */
 header {
     background-color: #007BFF; /* Синий фон */
     color: white; /* Белый цвет текста */
@@ -20,6 +23,7 @@ header {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+/* Стили навигационного меню */
 header nav ul {
     list-style-type: none; /* Убираем маркеры списка */
     margin: 0; /* Убираем внешние отступы */
@@ -51,17 +55,19 @@ header nav ul li a:hover {
     color: #c7e2ff; /* Изменение цвета текста при наведении */
 }
 
-div.navigator-filter {
-    margin: 10px;
-}
-
+/* Стили для общего контейнера */
 .container {
     width: 90%;
     margin: 0 auto;
 }
 
-/* Общие стили для формы */
-form {
+/* Стили для фильтров на странице поиска */
+div.navigator-filter {
+    margin: 10px;
+}
+
+/* Cтили для формы поиска */
+#search-form {
     background: white;
     padding: 20px;
     border-radius: 5px;
@@ -69,15 +75,15 @@ form {
     margin-bottom: 20px;
 }
 
-/* Стили для полей формы */
-label {
+/* Стили для подписей формы поиска */
+#search-form label {
     display: block; /* Полный блочный элемент */
-    font-size: 1rem; /* Размер шрифта для меток */
     margin-bottom: 5px; /* Отступ снизу от меток */
 }
 
-input[type="text"], 
-select {
+/* Стили для импутов формы поиска */
+#search-form input[type="text"], 
+#search-form select {
     width: 100%; /* Полная ширина полей ввода */
     padding: 10px; /* Внутренние отступы полей ввода */
     margin-bottom: 15px; /* Отступ снизу от полей ввода */
@@ -86,34 +92,26 @@ select {
     box-sizing: border-box; /* Учитывает границы и внутренние отступы в ширине */
 }
 
-input[type="text"]:focus, 
-select:focus {
+#search-form input[type="text"]:focus, 
+#search-form select:focus {
     border-color: #007BFF; /* Цвет границы при фокусе */
     outline: none; /* Убираем стандартный контур при фокусе */
 }
 
-.results {
-    margin-top: 20px; /* Отступ сверху для результатов поиска */
-}
-
-.results ul {
-    list-style-type: none; /* Убираем маркеры списка */
-    padding: 0; /* Убираем внутренние отступы списка */
-}
-
-.results ul li {
-    padding: 10px; /* Внутренние отступы для элементов списка */
-    border-bottom: 1px solid #ddd; /* Граница снизу элементов списка */
-}
-
-.results ul li:last-child {
-    border-bottom: none; /* Убираем границу у последнего элемента списка */
-}
-
-.inventory-section details {
+/* Стили для секции с таблицами */
+.inventory-section {
     margin-bottom: 20px;
 }
 
+/* Стили для заголовка секции с таблицами */
+.inventory-summary {
+    font-size: large;
+    padding: 10px;
+    color: rgb(65, 65, 65);
+    cursor: pointer;
+}
+
+/* Стили для таблиц с данными */
 .inventory-table {
     width: 100%;
     border-collapse: collapse;
@@ -126,12 +124,19 @@ select:focus {
     text-align: left;
 }
 
-/* Стиль для подписи, когда чекбокс неактивен */
+/* Стиль для чекбокса */
+.inventory-table input[type="checkbox"] {
+    cursor: pointer;
+}
+
+/* Стиль для подписи чекбокса, когда чекбокс неактивен */
 .inventory-table input[type="checkbox"]:disabled + label {
     color: rgb(169, 169, 169);
 }
 
-.file-upload {
+/* Стиль для управляющих элементов на странице внесения данных */
+.controls {
+    text-align: center;
     background: white;
     padding: 20px;
     border-radius: 5px;
@@ -139,11 +144,15 @@ select:focus {
     margin-bottom: 20px;
 }
 
-.controls {
-    text-align: center;
-    margin-bottom: 20px;
+#file-upload.controls {
+    text-align: left;
 }
 
+#file-name {
+    display: inline-block;
+}
+
+/* Общие стили для кнопок */
 button, input[type=file]::file-selector-button, input[type=submit]{
     background-color: #007BFF;
     color: white;
@@ -164,55 +173,61 @@ button:disabled, input[type=file]::file-selector-button:disabled ,  input[type=s
     cursor: not-allowed;
 }
 
+/* Стиль для контейнера с таблицей данных */
 .inventory-table-container {
     overflow-x: auto;
 }
-    
+
+/* Стиль для ячейки с данными и для ячейки заголовка */
 .inventory-table th, .inventory-table td {
     border: 1px solid #ddd;
     padding: 8px;
     text-align: left;
 }
 
+/* Стиль для заголовка таблицы с данными */
 .inventory-table th {
     background-color: #007BFF;
     color: white;
 }
- 
+
+/* Стиль для строки данных, если данные только из MTS */
 .inventory-table tr.mts-only {
     background-color: rgb(203, 229, 237);
 }
 
+/* Стиль для строки данных, если данные только из MTS */
 .inventory-table tr.excel-only {
     background-color: rgb(196, 250, 196);
 }
 
+/* Стиль для строки данных, если данные только из MTS */
 .inventory-table tr.both {
     background-color: rgb(226, 226, 226);
 }
 
-/* Стиль для данных из MTS */
+/* Стиль для данных, если данные только из MTS */
 .inventory-table .mts-data {
     color: blue;
 }
 
-/* Стиль для данных из Excel */
+/* Стиль для данных, если данные только из Excel */
 .inventory-table .excel-data {
     color: green;
 }
 
-/* Стиль для данных, если они совпадают в excel и в mts */
+/* Стиль для данных, если данные из MTS и Excel */
 .inventory-table .both-data {
     color: rgb(0, 0, 0);
 }
 
-/* Стиль для расхождений */
+/* Стиль для подписи о наличии расхождений */
 .inventory-table .discrepancy {
     color: red;
-    font-size: large;
     font-weight: bold;
 }
 
+/* Стиль для модального окна */
 #card-modal {
     display: none; 
     position: fixed; 
@@ -224,7 +239,8 @@ button:disabled, input[type=file]::file-selector-button:disabled ,  input[type=s
     background-color: rgba(0, 0, 0, 0.5);
 }
 
-.card-modal-content {
+/* Стиль для содержимого окна */
+#card-modal-content {
     background-color: white;
     margin: auto;
     padding: 20px;
@@ -238,6 +254,7 @@ button:disabled, input[type=file]::file-selector-button:disabled ,  input[type=s
     overflow-y: auto; /* Включаем прокрутку внутри модального окна */
 }
 
+/* Стиль для кнопки закрытия модального окна */
 #card-modal-close {
     position: absolute;
     top: 10px;
@@ -247,6 +264,7 @@ button:disabled, input[type=file]::file-selector-button:disabled ,  input[type=s
     cursor: pointer;
 }
 
+/* Стили для заголовка карточки с данными */
 #card-header {
     font-size: 1.5em;
     padding: 15px;
@@ -260,6 +278,7 @@ button:disabled, input[type=file]::file-selector-button:disabled ,  input[type=s
     margin-right: 30px;
 }
 
+/* Стили для таблицы данных в карточке */
 #card-table {
     width: 100%;
     border-collapse: collapse;
@@ -310,7 +329,6 @@ button:disabled, input[type=file]::file-selector-button:disabled ,  input[type=s
 #card-table .edit-btn {
     padding: 5px 10px;
     margin: 0;
-    font-size: 1em;
     float: right;
     width: 105px;
 }

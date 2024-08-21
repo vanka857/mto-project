@@ -70,6 +70,7 @@ function createSheet(sheet_data, sheet_index, container) {
     
     const details = document.createElement('details');
     const summary = document.createElement('summary');
+    summary.className = 'inventory-summary';
 
     if (sheet_data.number) summary.textContent = `Инвентаризационная ведомость №${sheet_data.number} от ${sheet_data.date}`;
     else summary.textContent = `${sheet_data.name}`;
