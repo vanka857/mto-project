@@ -290,20 +290,29 @@ button:disabled, input[type=file]::file-selector-button:disabled ,  input[type=s
     color: blue;
 }
 
-#card-table .data-label {
+#card-table .data-label, 
+#card-table .data-status-label {
     display: inline-block;
     padding: 5px;
-    margin-right: 10px;
-    margin-left: 5px;
-    color: gray;
     font-size: small;
+}
+
+#card-table .data-label {
+    color: gray;
+    margin-left: 5px;
+}
+
+#card-table .data-status-label {
+    color: red;
+    margin-right: 10px;
 }
 
 #card-table .edit-btn {
     padding: 5px 10px;
     margin: 0;
     font-size: 1em;
-    float:right;
+    float: right;
+    width: 105px;
 }
 
 #card-table .edit-btn-active {
@@ -316,6 +325,11 @@ button:disabled, input[type=file]::file-selector-button:disabled ,  input[type=s
 
 #card-table .excel-cell .edit-btn {
     display: none;
+}
+
+#card-table .edit-btn:disabled,
+#card-table .edit-btn[disabled] {
+    background-color: #626262;
 }
 
 #card-table.hide1-2 *.excel-cell,
@@ -358,4 +372,5 @@ button:disabled, input[type=file]::file-selector-button:disabled ,  input[type=s
 #card-table .error-cell {
     color: red;
     text-align: center;
+    font-size: x-large;
 }     

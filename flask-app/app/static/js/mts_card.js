@@ -1,107 +1,247 @@
-// здесь лежат функции, генерирующий контент, связанный
-// с карточкой mts: для модального окна или для отдельной страницы
+// здесь лежат функции, генерирующий контент, связанный с карточкой mts
 
-function openCardModal(item_data, id, on_save_callback) {
-    const container =  `
-        <div class="container">
-            <div id="card-header">
-                <span id="inv-number"></span>
-                <span id="name"></span>
-            </div>
-            <table id="card-table">
-                <thead>
-                <tr>
-                    <th class="excel-cell">Данные из excel</th>
-                    <th class="error-cell"></th>
-                    <th class="mts-cell">Данные из базы</th>
-                </tr>
-                </thead>
-                <tbody id="card-table-body">
-                </tbody>
-            </table>
-        </div>`;
 
-    setModalContent(container);
+class Card {
+    constructor(item_data, id) {
+        this.item_data = item_data;
+        this.id = id;
 
-    table = document.getElementById('card-table');
-    switch (item_data.getDataState()){
-        case 'mts-only':
-            table.classList.add('hide1-2');
-            break;
-        case 'excel-only':
-            table.classList.add('hide2-3');
-            break;
+        this.changes = {};
+
+        // список данных, которые будут видны в колонке данных из excel
+        this.excel_visible = ['item_name', 
+                              'unit_of_measure', 
+                              'volume', 
+                              'price'];
+
+        // список данных, которые будут видны в колонке данных из базы (mts)
+        this.mts_visible = ['item_name', 
+                            'unit_of_measure', 
+                            'volume', 
+                            'price', 
+                            'registration_date', 
+                            'registration_doc_no', 
+                            'write_off_date', 
+                            'write_off_doc_no'];
+
+        [, this.inventory_number, ] = this.item_data.getSourceDataValue('inventory_number');
+        [, this.item_name, ] = this.item_data.getSourceDataValue('item_name');
     }
 
-    table_body = document.getElementById('card-table-body');
+    // передача экземпляра модального окна в объект класса
+    setModal(modal) {
+        this.modal = modal;
+    }
 
-    item_data.visible_keys.forEach(key_id => {
-        table_body.appendChild(getCardRow(key_id, item_data.keys_dict[key_id], item_data));
-    });
+    render() {
+        const container =  `
+            <div class="container">
+                <div id="card-header">
+                    <span id="inv-number">${this.inventory_number}</span>
+                    <span id="name">${this.item_name}</span>
+                </div>
+                <table id="card-table">
+                    <thead>
+                    <tr>
+                        <th class="excel-cell">Данные из excel</th>
+                        <th class="error-cell"></th>
+                        <th class="mts-cell">Данные из базы</th>
+                    </tr>
+                    </thead>
+                    <tbody id="card-table-body">
+                    </tbody>
+                </table>
+            </div>`;
 
-    addButtonListeners();
+        // установка базового контейнера в модальное окно
+        if (this.modal) {
+            this.modal.setModalContent(container);
+        }
 
-    // table_body.innerHTML += item_data;
-    // adding data
-    // call on_save_callback
+        // добавление классов к таблице для скрытия ненужных столбцов
+        // в случае, если у нас только excel или только mts данные
+        const table = document.getElementById('card-table');
+        switch (this.item_data.getDataState()){
+            case 'mts-only':
+                table.classList.add('hide1-2');
+                break;
+            case 'excel-only':
+                table.classList.add('hide2-3');
+                break;
+        }
 
-    showModal();
-}
+        const table_body = document.getElementById('card-table-body');
 
-function getCardRow(key_id, key_name, item_data) {
-    const [excelValue, mtsValue, enriched_value] = item_data.getSourceDataValue(key_id);
-
-    const innerHTML = `
-        <tr>
-            <td class="data-cell excel-cell">
-                <span class="data-label">${key_name}</span>
-                <button class="edit-btn" data-id="${key_id}-1">Изменить</button>
-                <div class="data-display" id="data-${key_id}-1" contentEditable="false">${excelValue}</div>
-            </td>
-            <td class="error-cell" id="error-${key_id}"></td>
-            <td class="data-cell mts-cell">
-                <span class="data-label">${key_name}</span>
-                <button class="edit-btn" data-id="${key_id}-2">Изменить</button>
-                <div class="data-display" id="data-${key_id}-2" contentEditable="false">${mtsValue}</div>
-            </td>
-        </tr>`;
-
-    const row = document.createElement('tr');
-    row.innerHTML = innerHTML;
-      
-    return row;
-}
-
-function addButtonListeners() {
-    const editButtons = document.querySelectorAll('.edit-btn');
-      
-    editButtons.forEach(button => {
-        button.addEventListener('click', function () {
-        const id = this.getAttribute('data-id');
-        const displayDiv = document.getElementById('data-' + id);
-        // const errorCell = document.getElementById('error-' + id);
+        const edit_button_listener = (button) => {
+            const id = button.getAttribute('data-id');
+            const displayDiv = document.getElementById('mts-data-' + id);
+        
+            if (displayDiv.contentEditable === 'false') {
+                button.textContent = 'Сохранить';
+                button.classList.add('edit-btn-active');
     
-        if (displayDiv.contentEditable === 'false') {
-            this.textContent = 'Сохранить';
-            this.classList.add('edit-btn-active');
-
-            displayDiv.classList.add('data-display-editable');
-            displayDiv.contentEditable = 'true';
-            // errorCell.textContent = ''; // Очистка сообщения об ошибке при редактировании
-        } else {
-            const newValue = displayDiv.textContent;
-            if (false && newValue.trim() === '') {
-            errorCell.textContent = 'Значение не может быть пустым';
+                displayDiv.classList.add('data-display-editable');
+                displayDiv.contentEditable = 'true';
             } else {
-                this.textContent = 'Изменить';
-                this.classList.remove('edit-btn-active');
+                button.textContent = 'Изменить';
+                button.classList.remove('edit-btn-active');
 
                 displayDiv.classList.remove('data-display-editable');
                 displayDiv.contentEditable = 'false';
-                // save changes
-                // errorCell.textContent = ''; // Очистка сообщения об ошибке при успешном сохранении
+
+                this.addChanges(id);
+                this.updateDiscrepancy(id);
             }
+        };
+
+        const edit_button_data = {
+            label: "Изменить",
+            func: edit_button_listener
         }
+
+        this.item_data.visible_keys.forEach(key_id => {
+            let row;
+            if (this.mts_visible.includes(key_id)) {
+                // создание строки с кнопкой редактирования
+                row = this.getCardRow(key_id, this.item_data.keys_dict[key_id], edit_button_data);
+            }
+            else {
+                // создание строки без кнопок
+                row = this.getCardRow(key_id, this.item_data.keys_dict[key_id]);    
+            }
+            table_body.appendChild(row);    
+             
+            // обработка проблемы со вставкой html-кода в contentEditable div
+            var contentEditableNodes = document.querySelectorAll('.data-display');
+            [].forEach.call(contentEditableNodes, function(div) {
+                div.addEventListener("input", 
+                    function() {
+                        const textContent = this.textContent;
+                        this.textContent = textContent
+                    }, 
+                    false);
+            });
+            
+            // обновления столбца с расхождениями 
+            // для отображения расхождений, если они есть сразу
+            this.updateDiscrepancy(key_id);
         });
-    });
+
+        if (this.modal) {
+            this.modal.showModal();
+        }
+    }
+
+    // функция, которая готовит строку в таблице на карточке Card
+    getCardRow(key_id, key_name, button_data) {
+        const [excel_value, mts_value, enriched_value] = this.item_data.getSourceDataValue(key_id);
+    
+        // Создание основного элемента строки
+        const row = document.createElement('tr');
+    
+        // Создание ячейки для данных Excel
+        const excelCell = document.createElement('td');
+        excelCell.className = 'data-cell excel-cell';
+        row.appendChild(excelCell);
+    
+        if (this.excel_visible.includes(key_id)) {
+            // Название данных
+            const excelLabel = document.createElement('span');
+            excelLabel.className = 'data-label';
+            excelLabel.textContent = key_name;
+            excelCell.appendChild(excelLabel);
+        
+            // Отображение данных Excel
+            const excelData = document.createElement('div');
+            excelData.className = 'data-display';
+            excelData.id = `excel-data-${key_id}`;
+            excelData.contentEditable = 'false';
+            excelData.textContent = excel_value || '';
+            excelCell.appendChild(excelData);
+        }
+        
+        // Создание ячейки для ошибок
+        const errorCell = document.createElement('td');
+        errorCell.className = 'error-cell';
+        errorCell.id = `error-${key_id}`;
+        row.appendChild(errorCell);
+
+        // Создание ячейки для данных MTS
+        const mtsCell = document.createElement('td');
+        mtsCell.className = 'data-cell mts-cell';
+        row.appendChild(mtsCell);
+
+        // Определяем выводимое значение в ячейке MTS. 
+        // Если есть mts_value, то выводим его, 
+        // иначе выводим enriched_value, если оно есть
+        let value;
+        if (mts_value) value = mts_value;
+        else if (enriched_value) value = enriched_value;
+        else value = '';
+
+        //Наполняем ячейку MTS в двух случаях: если ключ включен в mts_visible, 
+        // либо если фактически есть расширенные (enriched) данные по этому ключу
+        if (this.mts_visible.includes(key_id) || enriched_value) {
+            // Название данных MTS
+            const mtsLabel = document.createElement('span');
+            mtsLabel.className = 'data-label';
+            mtsLabel.textContent = key_name;
+            mtsCell.appendChild(mtsLabel);
+        
+            // Статус данных MTS
+            const mtsStatusLabel = document.createElement('span');
+            mtsStatusLabel.className = 'data-status-label data-status-label-hide';
+            mtsStatusLabel.id = `data-status-label-${key_id}`;
+            mtsCell.appendChild(mtsStatusLabel);
+        
+            // Кнопка
+            if (button_data) {
+                const button = document.createElement('button');
+                button.className = 'edit-btn';
+                button.dataset.id = key_id;
+                button.addEventListener('click', () => button_data.func(button));
+                button.textContent = button_data.label;
+                mtsCell.appendChild(button);
+            }
+        
+            // Отображение данных MTS
+            const mtsData = document.createElement('div');
+            mtsData.className = 'data-display';
+            mtsData.id = `mts-data-${key_id}`;
+            mtsData.contentEditable = 'false';
+            mtsData.textContent = value;
+            mtsCell.appendChild(mtsData);
+        }
+    
+        return row;
+    }
+
+    // метод для обновления столбца с расхождениями в данных
+    updateDiscrepancy(key_id) {
+        const mts_elem = document.getElementById('mts-data-' + key_id);
+        const mts_value = mts_elem ? mts_elem.textContent : null;
+        const excel_elem = document.getElementById('excel-data-' + key_id);
+        const excel_value = excel_elem ? excel_elem.textContent : null;
+
+        const errorCell = document.getElementById('error-' + key_id);
+        
+        if (mts_value && excel_value && mts_value !== excel_value) {
+            errorCell.textContent = '⚠';
+        }
+        else {
+            errorCell.textContent = '';
+        }
+    }
+
+    // Добавление нового значения в словарь обновлений. 
+    // key-id — это столбца с данными
+    addChanges(key_id) {
+        this.changes[key_id] = document.getElementById('mts-data-' + key_id).textContent;
+        const data_status_label = document.getElementById('data-status-label-' + key_id);
+        data_status_label.textContent = 'Изменено';
+    }
+
+    getChanges() {
+        return this.changes;
+    }
 }

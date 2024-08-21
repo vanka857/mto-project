@@ -45,7 +45,7 @@ class Checkbox {
 class BasicRow {
     constructor(data, id, column_ids, column_dict) {
         this.data = new ItemData(data, column_ids, column_dict);
-
+        this.card = new Card(this.data, id);
         this.id = id;
     }
 
@@ -68,16 +68,27 @@ class BasicRow {
             // Проверка, не был ли клик по элементу, который уже имеет свой обработчик
             if (!event.target.closest('.actionable')) {
                 event.preventDefault();
-                openCardModal(this.data, this.id, this.data.visible_keys, 
-                    {label: 'Отправить изменения', func: this.sendUpdates});
+
+                const modal = new Modal('card-modal',
+                                        'card-modal-body', 
+                                        'card-modal-close', 
+                                        () => {
+                                            this.applyUpdates();
+                                        });
+                
+                this.card.setModal(modal);
+                this.card.render();
             }
         });
 
         return row;
     }
 
-    sendUpdates() {
-        // TODO
+    applyUpdates() {
+        const updates = this.card.getChanges();
+        if (Object.keys(updates).length > 0) {
+            console.log('Updates: ', this.card.getChanges());
+        }
     }
 
     makeCellSpan(class_name, value) {

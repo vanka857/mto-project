@@ -1,42 +1,48 @@
-// Получаем модальное окно
-var modal = document.getElementById("card-modal");
+class Modal {
+    constructor(modal_id, modal_body_id, modal_close_id, on_close_callback) {
+        // Получаем модальное окно
+        this.modal = document.getElementById(modal_id);
 
-// Получаем элемент для отображения контента
-var modalBody = document.getElementById("card-modal-body");
+        // Получаем элемент для отображения контента
+        this.modal_body = document.getElementById(modal_body_id);
 
-// Получаем кнопку для закрытия модального окна
-var span = document.getElementById("card-modal-close");
+        // Получаем кнопку для закрытия модального окна
+        this.close_span = document.getElementById(modal_close_id);
 
+        this.on_close_callback = on_close_callback;
 
-function setModalContent(innerHTML) {
-    modalBody.innerHTML = innerHTML;
-}
+        // Когда пользователь нажимает на <span> (x), закрыть окно
+        this.close_span.onclick = () => {
+            this.closeModal();
+        }
 
-function showModal() {
-    modal.style.display = "block";
-    document.body.classList.add('modal-open');
-}
+        // Когда пользователь нажимает в любом месте за пределами модального окна, закрыть его
+        window.onclick = (event) => {
+            if (event.target == this.modal) {
+                this.closeModal();
+            }
+        }
 
-function closeModal() {
-    modal.style.display = "none";
-    document.body.classList.remove('modal-open');
-}
-
-// Когда пользователь нажимает на <span> (x), закрыть окно
-span.onclick = function() {
-    closeModal();
-}
-
-// Когда пользователь нажимает в любом месте за пределами модального окна, закрыть его
-window.onclick = function(event) {
-    if (event.target == modal) {
-        closeModal();
+        // Когда пользователь нажимает клавишу Escape, закрыть окно
+        document.onkeydown = (event) => {
+            if (event.key === "Escape") {
+                this.closeModal();
+            }
+        }
     }
-}
 
-// Когда пользователь нажимает клавишу Escape, закрыть окно
-document.onkeydown = function(event) {
-    if (event.key === "Escape") {
-        closeModal();
+    setModalContent(innerHTML) {
+        this.modal_body.innerHTML = innerHTML;
+    }
+    
+    showModal() {
+        this.modal.style.display = "block";
+        document.body.classList.add('modal-open');
+    }
+    
+    closeModal() {
+        this.modal.style.display = "none";
+        document.body.classList.remove('modal-open');
+        if (this.on_close_callback) this.on_close_callback();
     }
 }
