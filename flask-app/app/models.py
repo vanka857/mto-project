@@ -49,7 +49,8 @@ class MTS(db.Model):
 class Appointment(db.Model):
     __tablename__ = 'appointments'
     __table_args__ = {'schema': 'mto'}
-    mts_id = db.Column(db.Integer, db.ForeignKey('mto.mts.id'), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    mts_id = db.Column(db.Integer, db.ForeignKey('mto.mts.id'), nullable=False)
     owner_id = db.Column(db.Integer, db.ForeignKey('mto.staff.id'), nullable=False)
     old_owner_id = db.Column(db.Integer, db.ForeignKey('mto.staff.id'))
     date_time = db.Column(db.DateTime)
@@ -58,7 +59,8 @@ class Appointment(db.Model):
 class Movement(db.Model):
     __tablename__ = 'movements'
     __table_args__ = {'schema': 'mto'}
-    mts_id = db.Column(db.Integer, db.ForeignKey('mto.mts.id'), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    mts_id = db.Column(db.Integer, db.ForeignKey('mto.mts.id'), nullable=False)
     room_id = db.Column(db.Integer, db.ForeignKey('mto.rooms.id'), nullable=False)
     old_room_id = db.Column(db.Integer, db.ForeignKey('mto.rooms.id'))
     date_time = db.Column(db.DateTime)
