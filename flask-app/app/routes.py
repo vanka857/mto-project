@@ -4,7 +4,7 @@ import os
 from werkzeug.utils import secure_filename
 from sqlalchemy.orm import subqueryload
 from sqlalchemy import or_, func
-from .models import db, MTS, Room, Staff, Movement, Appointment
+from .models import db, MTS, Room, Staff, Movement, Appointment, MTSCategory
 from .forms import SearchForm
 from .source.reader import read_excel_file
 from .source.data import InventoryItem, InventorySheet, BasicSheet, Column
@@ -21,6 +21,7 @@ inventory_columns_to_show = [
     Column('unit_of_measure', 'Единица измерения'),
     Column('volume', 'Количество'),
     Column('price', 'Стоимость'),
+    Column('category_name', 'Категория'),
     Column('registration_date', 'Дата постановки на учет'),
     Column('registration_doc_no', 'Документ постановки на учет'),
     Column('responsible_surname', 'Ответственный'),
@@ -33,6 +34,7 @@ search_columns_to_show = [
     Column('item_name', 'Наименование'),
     Column('unit_of_measure', 'Единица измерения'),
     Column('volume', 'Количество'),
+    Column('category_name', 'Категория'),
     Column('registration_date', 'Дата постановки на учет'),
     Column('registration_doc_no', 'Документ постановки на учет'),
     Column('responsible_surname', 'Ответственный'),
@@ -50,11 +52,11 @@ def home_page():
 def fetch():
     return render_template('fetch.html', app_title=app_title, page_title='внесение данных')
 
-@bp.route('/navigator', methods=['GET', 'POST'])
-def navigator():
-    form = SearchForm()
-
+def fill_choises(form):
     # Заполнение списка выборов
+    form.category.choices = [('', 'Не выбрано')] + [
+        (c.name, c.name) for c in db.session.query(MTSCategory.name).distinct().order_by(MTSCategory.name)
+    ]
     form.responsible.choices = [('', 'Не выбрано')] + [
         (s.surname, s.surname) for s in db.session.query(Staff.surname).distinct().order_by(Staff.surname)
     ]
@@ -62,19 +64,17 @@ def navigator():
         (r.name_, r.name_) for r in db.session.query(Room.name_).distinct().order_by(Room.name_)
     ]
 
+@bp.route('/navigator', methods=['GET', 'POST'])
+def navigator():
+    form = SearchForm()
+    fill_choises(form)
+
     return render_template('navigator.html', app_title=app_title, page_title="поиск", form=form)
 
 @bp.route('/navigator/search', methods=['POST'])
 def search():
     form = SearchForm()
-
-    # Получаем список уникальных фамилий ответственных и названий помещений
-    form.responsible.choices = [('', 'Не выбрано')] + [
-        (s.surname, s.surname) for s in db.session.query(Staff.surname).distinct()
-    ]
-    form.location.choices = [('', 'Не выбрано')] + [
-        (r.name_, r.name_) for r in db.session.query(Room.name_).distinct()
-    ]
+    fill_choises(form)
 
     if form.validate_on_submit():
         
@@ -84,6 +84,8 @@ def search():
         staff_surname = form.responsible.data if form.responsible.data else None
         # Фильтрация помещений, если указано название
         room_name = form.location.data if form.location.data else None
+        # Фильтрация категории, если указана категория
+        category_name = form.category.data if form.category.data else None
 
         # Подзапрос для получения последних назначений
         latest_appointment_subquery = (
@@ -150,6 +152,9 @@ def search():
         if room_name:
             mts_query = mts_query.filter(Movement.room.has(Room.name_ == room_name))
 
+        if category_name:
+            mts_query = mts_query.filter(MTS.category.has(MTSCategory.name == category_name))
+
         if query:
             mts_query = mts_query.filter(
                 or_(
@@ -180,7 +185,7 @@ def search():
         for mts in results:
             sheet.add_item(InventoryItem(mts_object=mts))
 
-    return return_data_as_dict([sheet], 'success', f'Найдено {len(sheet.items)} резальтатов!')
+        return return_data_as_dict([sheet], 'success', f'Найдено {len(sheet.items)} резальтатов!')
 
 @bp.route('/fetch/upload', methods=['POST'])
 def upload():

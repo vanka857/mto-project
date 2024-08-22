@@ -5,15 +5,19 @@
     <form id="search-form" class="controls">
         {{ form.csrf_token }}
         <div class="navigator-filter">
-            <label for="responsible">Ответственный</label>
+            <label for="category">{{ form.category.label }}</label>
+            {{ form.category }}
+        </div>
+        <div class="navigator-filter">
+            <label for="responsible">{{ form.responsible.label }}</label>
             {{ form.responsible }}
         </div>
         <div class="navigator-filter">
-            <label for="location">Помещение</label>
+            <label for="location">{{ form.location.label }}</label>
             {{ form.location }}
         </div>
         <div class="navigator-filter">
-            <label for="name_or_inventory_number">Название или инвентарный номер</label>
+            <label for="name_or_inventory_number">{{ form.name_or_inventory_number.label }}</label>
             {{ form.name_or_inventory_number }}
         </div>
         <div>

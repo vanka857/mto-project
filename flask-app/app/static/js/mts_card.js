@@ -23,6 +23,7 @@ class Card {
                             'unit_of_measure', 
                             'volume', 
                             'price', 
+                            'category_name',
                             'registration_date', 
                             'registration_doc_no', 
                             'responsible_surname', 

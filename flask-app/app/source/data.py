@@ -78,6 +78,10 @@ class InventoryItem:
                 mts_data_dict['room_name'] = movements[0].room.name_
                 mts_data_dict['latest_movement_date_time'] = movements[0].date_time.strftime('%Y-%m-%d %H:%M:%S')
 
+            category = self.mts_object.category
+            if category:
+                mts_data_dict['category_name'] = category.name
+
         return {
             "excel_data": self.excel_data.to_dict() if self.excel_data else {},
             "mts_data": mts_data_dict,
