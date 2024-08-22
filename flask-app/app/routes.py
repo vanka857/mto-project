@@ -2,8 +2,8 @@ from flask import Blueprint, render_template, request, session, jsonify, current
 from datetime import datetime
 import os
 from werkzeug.utils import secure_filename
-from sqlalchemy.orm import aliased
-from sqlalchemy import func
+from sqlalchemy.orm import subqueryload
+from sqlalchemy import or_, func
 from .models import db, MTS, Room, Staff, Movement, Appointment
 from .forms import SearchForm
 from .source.reader import read_excel_file
@@ -15,7 +15,7 @@ app_title = 'Материально-техническое обеспечени�
 
 inventory_columns_to_show = [
     Column('number_excel', 'Номер в ведомости'),
-    Column('number_mts', 'Номер в базе'),
+    Column('id', 'Номер в базе'),
     Column('inventory_number', 'Инвентарный номер'),
     Column('item_name', 'Наименование'),
     Column('unit_of_measure', 'Единица измерения'),
@@ -23,12 +23,12 @@ inventory_columns_to_show = [
     Column('price', 'Стоимость'),
     Column('registration_date', 'Дата постановки на учет'),
     Column('registration_doc_no', 'Документ постановки на учет'),
-    Column('write_off_date', 'Дата списания'),
-    Column('write_off_doc_no', 'Документ списания'),
+    Column('responsible_surname', 'Ответственный'),
+    Column('room_name', 'Помещение')
 ]
 
 search_columns_to_show = [
-    Column('number_mts', 'Номер в базе'),
+    Column('id', 'Номер в базе'),
     Column('inventory_number', 'Инвентарный номер'),
     Column('item_name', 'Наименование'),
     Column('unit_of_measure', 'Единица измерения'),
@@ -76,83 +76,109 @@ def search():
         (r.name_, r.name_) for r in db.session.query(Room.name_).distinct()
     ]
 
-    results = None
-
     if form.validate_on_submit():
-        responsible_surname = form.responsible.data
-        location_name = form.location.data
+        
+        # Получение фильтров из формы
         query = form.name_or_inventory_number.data
+        # Фильтрация сотрудников, если указана фамилия
+        staff_surname = form.responsible.data if form.responsible.data else None
+        # Фильтрация помещений, если указано название
+        room_name = form.location.data if form.location.data else None
 
-        # Алиасы для таблиц
-        latest_appointment = aliased(Appointment)
-        latest_movement = aliased(Movement)
+        # Подзапрос для получения последних назначений
+        latest_appointment_subquery = (
+            db.session.query(
+                Appointment.mts_id,
+                func.max(Appointment.date_time).label('latest_date')
+            ).group_by(Appointment.mts_id).subquery()
+        )
 
-        # Подзапрос для получения последнего назначения ответственного для каждого MTS
-        appointment_subquery = db.session.query(
-            Appointment.mts_id,
-            func.max(Appointment.date_time).label('latest_date')
-        ).group_by(Appointment.mts_id).subquery()
+        # Подзапрос для получения ID последних назначений
+        latest_appointment_id_subquery = (
+            db.session.query(
+                Appointment.id.label('appointment_id'),
+                Appointment.mts_id
+            ).join(
+                latest_appointment_subquery,
+                (Appointment.mts_id == latest_appointment_subquery.c.mts_id) &
+                (Appointment.date_time == latest_appointment_subquery.c.latest_date)
+            ).subquery()
+        )
 
-        # Подзапрос для получения последнего перемещения для каждого MTS
-        movement_subquery = db.session.query(
-            Movement.mts_id,
-            func.max(Movement.date_time).label('latest_date')
-        ).group_by(Movement.mts_id).subquery()
+        # Подзапрос для получения последних перемещений
+        latest_movement_subquery = (
+            db.session.query(
+                Movement.mts_id,
+                func.max(Movement.date_time).label('latest_date')
+            ).group_by(Movement.mts_id).subquery()
+        )
 
-        # Основной запрос с JOIN и фильтрацией
-        filters = []
+        # Подзапрос для получения ID последних перемещений
+        latest_movement_id_subquery = (
+            db.session.query(
+                Movement.id.label('movement_id'),
+                Movement.mts_id
+            ).join(
+                latest_movement_subquery,
+                (Movement.mts_id == latest_movement_subquery.c.mts_id) &
+                (Movement.date_time == latest_movement_subquery.c.latest_date)
+            ).subquery()
+        )
 
-        # Фильтрация по фамилии ответственного
-        if responsible_surname:
-            filters.append(Staff.surname == responsible_surname)
+        # Основной запрос с подзапросами
+        mts_query = db.session.query(MTS).options(
+            subqueryload(MTS.movements).subqueryload(Movement.room),
+            subqueryload(MTS.appointments).subqueryload(Appointment.owner)
+        ).outerjoin(
+            latest_appointment_id_subquery,
+            (MTS.id == latest_appointment_id_subquery.c.mts_id)
+        ).outerjoin(
+            Appointment,
+            Appointment.id == latest_appointment_id_subquery.c.appointment_id
+        ).outerjoin(
+            latest_movement_id_subquery,
+            (MTS.id == latest_movement_id_subquery.c.mts_id)
+        ).outerjoin(
+            Movement,
+            Movement.id == latest_movement_id_subquery.c.movement_id
+        )
 
-        # Фильтрация по названию помещения
-        if location_name:
-            filters.append(Room.name_ == location_name)
+        # Применение фильтров
+        if staff_surname:
+            mts_query = mts_query.filter(Appointment.owner.has(Staff.surname == staff_surname))
+
+        if room_name:
+            mts_query = mts_query.filter(Movement.room.has(Room.name_ == room_name))
 
         if query:
-            filters.append((MTS.item_name.ilike(f'{query}%')) | (MTS.inventory_number.ilike(f'{query}%')))
+            mts_query = mts_query.filter(
+                or_(
+                    MTS.item_name.ilike(f'%{query}%'),
+                    MTS.inventory_number.ilike(f'{query}%')
+                )
+            )
 
-        responsible_surname_label = 'responsible_surname'
-        latest_appointment_date_time_label = 'latest_appointment_date_time'
-        room_name_label = 'room_name'
-        latest_movement_date_time_label = 'latest_movement_date_time'
+        # Добавление алиасов для полей сортировки
+        mts_query = mts_query.outerjoin(
+            Staff, Staff.id == Appointment.owner_id
+        ).outerjoin(
+            Room, Room.id == Movement.room_id
+        )
 
-        results = db.session.query(MTS, 
-                                   Staff.surname.label(responsible_surname_label),
-                                   latest_appointment.date_time.label(latest_appointment_date_time_label),
-                                   Room.name_.label(room_name_label),
-                                   latest_movement.date_time.label(latest_movement_date_time_label)
-        ).join(
-            appointment_subquery,
-            appointment_subquery.c.mts_id == MTS.id
-        ).join(
-            latest_appointment,
-            (latest_appointment.mts_id == MTS.id) &
-            (latest_appointment.date_time == appointment_subquery.c.latest_date)
-        ).join(
-            Staff,
-            Staff.id == latest_appointment.owner_id
-        ).join(
-            movement_subquery,
-            movement_subquery.c.mts_id == MTS.id
-        ).join(
-            latest_movement,
-            (latest_movement.mts_id == MTS.id) &
-            (latest_movement.date_time == movement_subquery.c.latest_date)
-        ).join(
-            Room,
-            Room.id == latest_movement.room_id
-        ).filter(*filters
-        ).order_by(Staff.surname, Room.name_).all()
+        # Сортировка по фамилии и названию комнаты
+        mts_query = mts_query.order_by(
+            Staff.surname,
+            Room.name_
+        )
 
+        # Выполнение запроса
+        results = mts_query.all()
+
+        # Создание и заполнение листа
         sheet = BasicSheet(columns=search_columns_to_show)
-        for result in results:
-            enriched_data_dict = {responsible_surname_label: result[1],
-                                  latest_appointment_date_time_label: result[2].strftime('%Y-%m-%d %H:%M:%S'),
-                                  room_name_label: result[3],
-                                  latest_movement_date_time_label: result[4].strftime('%Y-%m-%d %H:%M:%S')}
-            sheet.add_item(InventoryItem(mts_object=result[0], enriched_data_dict=enriched_data_dict))
+
+        for mts in results:
+            sheet.add_item(InventoryItem(mts_object=mts))
 
     return return_data_as_dict([sheet], 'success', f'Найдено {len(sheet.items)} резальтатов!')
 
@@ -250,7 +276,7 @@ def fetch_from_db():
     founded_inv_numbers = []
     for inventory in inventories:
         for item in inventory.items:
-            inventory_number = item.excel_data.inventory_number    
+            inventory_number = item.excel_data.dict['inventory_number']    
             db_item = MTS.query \
                 .filter(MTS.inventory_number == inventory_number, MTS.written_off == False) \
                 .first()

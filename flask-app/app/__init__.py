@@ -5,7 +5,7 @@ from config import Config
 import os
 
 
-db = SQLAlchemy()
+db = SQLAlchemy(session_options={"expire_on_commit": False})
 sess = Session()
 
 def create_app():

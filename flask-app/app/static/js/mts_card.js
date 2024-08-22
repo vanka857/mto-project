@@ -25,8 +25,10 @@ class Card {
                             'price', 
                             'registration_date', 
                             'registration_doc_no', 
-                            'write_off_date', 
-                            'write_off_doc_no'];
+                            'responsible_surname', 
+                            'latest_appointment_date_time',
+                            'room_name',
+                            'latest_movement_date_time'];
 
         this.inventory_number = this.item_data.getSourceDataValueOne('inventory_number');
         this.item_name = this.item_data.getSourceDataValueOne('item_name');
