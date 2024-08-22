@@ -11,7 +11,7 @@ from .source.data import InventoryItem, InventorySheet, BasicSheet, Column
 
 
 bp = Blueprint('main', __name__)
-app_title = 'Материально-техническое обеспечение 0.1.1'
+app_title = 'Материально-техническое обеспечение 0.1.2'
 
 inventory_columns_to_show = [
     Column('number_excel', 'Номер в ведомости'),
