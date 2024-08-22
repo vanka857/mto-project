@@ -188,7 +188,7 @@ class Card {
         else if (enriched_value) value = enriched_value;
         else value = '';
 
-        //Наполняем ячейку MTS в двух случаях: если ключ включен в mts_visible, 
+        // Наполняем ячейку MTS в двух случаях: если ключ включен в mts_visible, 
         // либо если фактически есть расширенные (enriched) данные по этому ключу
         if (this.mts_visible.includes(key_id) || enriched_value) {
             // Название данных MTS
@@ -206,6 +206,9 @@ class Card {
             // Кнопка
             if (button_data) {
                 const button = document.createElement('button');
+
+                button.disabled = true;
+
                 button.className = 'edit-btn';
                 button.dataset.id = key_id;
                 button.addEventListener('click', () => button_data.func(button));
