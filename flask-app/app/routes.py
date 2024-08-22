@@ -4,9 +4,9 @@ import os
 from werkzeug.utils import secure_filename
 from sqlalchemy.orm import aliased
 from sqlalchemy import func
-from .utils import read_excel_file
 from .models import db, MTS, Room, Staff, Movement, Appointment
 from .forms import SearchForm
+from .source.reader import read_excel_file
 from .source.data import InventoryItem, InventorySheet, BasicSheet, Column
 
 
