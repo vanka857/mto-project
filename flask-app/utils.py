@@ -1,5 +1,5 @@
 from app import db, create_app
-from app.models import MTS, Department, Room, Staff, Appointment, Movement
+from app.models import MTS, Department, Room, Staff, Appointment, Movement, MTSCategory
 from datetime import datetime, timedelta
 
 
@@ -40,15 +40,21 @@ with app.app_context():
         db.session.add_all(staff_members)
         db.session.commit()
 
+        category1 = MTSCategory(name='Тестовая категория 1')
+        category2 = MTSCategory(name='Тестовая категория 2')
+
+        db.session.add_all([category1, category2])
+        db.session.commit()
+
         # Вставка тестовых данных в таблицу MTS
         mts_items = [
-            MTS(item_name='Брошюровщик Renz SRW 360, без орг., 25л./120л.мет.пруж', inventory_number='41013417818', unit_of_measure='шт.', price=54950, registration_date=datetime(2022, 3, 27), registration_doc_no='0000-000525'),
-            MTS(item_name='Тележка гидравлическая MEWA MW 20, 2000кг, 1150x550', inventory_number='410136188249', unit_of_measure='шт.', price=18000, registration_date=datetime(2022, 3, 27), registration_doc_no='0000-000525'),
-            MTS(item_name='Уничтожитель документов HSM Securio AF150 4.5x30,4 ур.секр., 12лист, 34л', inventory_number='410134178539', unit_of_measure='шт.', price=49990, registration_date=datetime(2022, 3, 27), registration_doc_no='0000-000525'),
-            MTS(item_name='Уничтожитель документов HSM Securio AF150 4.5x30,4 ур.секр., 12лист, 34л', inventory_number='410134178540', unit_of_measure='шт.', price=49990, registration_date=datetime(2022, 3, 27), registration_doc_no='0000-000525'),
-            MTS(item_name='Уничтожитель документов HSM Securio AF150 4.5x30,4 ур.секр., 12лист, 34л', inventory_number='410134178620', unit_of_measure='шт.', price=49990, registration_date=datetime(2022, 3, 27), registration_doc_no='0000-000525'),
-            MTS(item_name='Лампа оригинальная смодулем', inventory_number='410136200788', unit_of_measure='шт.', price=12017, registration_date=datetime(2022, 3, 27), registration_doc_no='0000-000525'),
-            MTS(item_name='Принтер офисный HP LaserJet Pro', inventory_number='410200001001', unit_of_measure='шт.', price=20500, registration_date=datetime(2022, 3, 27), registration_doc_no='0000-000525'),
+            MTS(item_name='Брошюровщик Renz SRW 360, без орг., 25л./120л.мет.пруж', inventory_number='41013417818', unit_of_measure='шт.', price=54950, registration_date=datetime(2022, 3, 27), registration_doc_no='0000-000525', category=category1),
+            MTS(item_name='Тележка гидравлическая MEWA MW 20, 2000кг, 1150x550', inventory_number='410136188249', unit_of_measure='шт.', price=18000, registration_date=datetime(2022, 3, 27), registration_doc_no='0000-000525', category=category1),
+            MTS(item_name='Уничтожитель документов HSM Securio AF150 4.5x30,4 ур.секр., 12лист, 34л', inventory_number='410134178539', unit_of_measure='шт.', price=49990, registration_date=datetime(2022, 3, 27), registration_doc_no='0000-000525', category=category1),
+            MTS(item_name='Уничтожитель документов HSM Securio AF150 4.5x30,4 ур.секр., 12лист, 34л', inventory_number='410134178540', unit_of_measure='шт.', price=49990, registration_date=datetime(2022, 3, 27), registration_doc_no='0000-000525', category=category2),
+            MTS(item_name='Уничтожитель документов HSM Securio AF150 4.5x30,4 ур.секр., 12лист, 34л', inventory_number='410134178620', unit_of_measure='шт.', price=49990, registration_date=datetime(2022, 3, 27), registration_doc_no='0000-000525', category=category2),
+            MTS(item_name='Лампа оригинальная смодулем', inventory_number='410136200788', unit_of_measure='шт.', price=12017, registration_date=datetime(2022, 3, 27), registration_doc_no='0000-000525', category=category2),
+            MTS(item_name='Принтер офисный HP LaserJet Pro', inventory_number='410200001001', unit_of_measure='шт.', price=20500, registration_date=datetime(2022, 3, 27), registration_doc_no='0000-000525', category=category2),
             MTS(item_name='Кофемашина DeLonghi Magnifica S', inventory_number='410200001002', unit_of_measure='шт.', price=45500, registration_date=datetime(2022, 3, 27), registration_doc_no='0000-000525'),
             MTS(item_name='Сканер документов Canon ScanJet', inventory_number='410200001003', unit_of_measure='шт.', price=8900, registration_date=datetime(2022, 3, 27), registration_doc_no='0000-000525'),
             MTS(item_name='Монитор Dell UltraSharp 27"', inventory_number='410200001004', unit_of_measure='шт.', price=37000, registration_date=datetime(2022, 3, 27), registration_doc_no='0000-000525'),
@@ -119,8 +125,8 @@ with app.app_context():
     def create_all():
         db.create_all()
 
-    # drop_db()
-    # create_all()
-    # fill_db()
+    drop_db()
+    create_all()
+    fill_db()
 
-    print(Movement.query.all())
+    print(MTS.query.get(5).category)

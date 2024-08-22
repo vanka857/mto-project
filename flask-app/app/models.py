@@ -9,6 +9,7 @@ class Department(db.Model):
     parent_id = db.Column(db.Integer, db.ForeignKey('mto.departments.id'))
     children = db.relationship('Department', backref=db.backref('parent', remote_side=[id]))
 
+
 class Room(db.Model):
     __tablename__ = 'rooms'
     __table_args__ = {'schema': 'mto'}
@@ -16,6 +17,7 @@ class Room(db.Model):
     name_ = db.Column(db.String(500))
     purpose = db.Column(db.String(500))
     address = db.Column(db.String(500))
+
 
 class Staff(db.Model):
     __tablename__ = 'staff'
@@ -27,6 +29,7 @@ class Staff(db.Model):
     position = db.Column(db.String(500))
     rank = db.Column(db.String(50))
     department_id = db.Column(db.Integer, db.ForeignKey('mto.departments.id'))
+
 
 class MTS(db.Model):
     __tablename__ = 'mts'
@@ -45,6 +48,18 @@ class MTS(db.Model):
     registration_doc_no = db.Column(db.String(255))
     revaluation_doc_no = db.Column(db.String(255))
     write_off_doc_no = db.Column(db.String(255))
+    movements = db.relationship('Movement', backref='MTS', lazy=True, order_by='Movement.date_time.desc()')
+    appointments = db.relationship('Appointment', backref='MTS', lazy=True, order_by='Appointment.date_time.desc()')
+    category_id = db.Column(db.Integer, db.ForeignKey('mto.mts_category.id'), nullable=True)
+    category= db.relationship('MTSCategory', lazy=True)
+
+
+class MTSCategory(db.Model):
+    __tablename__ = 'mts_category'
+    __table_args__ = {'schema': 'mto'}
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(30))
+
 
 class Appointment(db.Model):
     __tablename__ = 'appointments'
@@ -52,9 +67,11 @@ class Appointment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     mts_id = db.Column(db.Integer, db.ForeignKey('mto.mts.id'), nullable=False)
     owner_id = db.Column(db.Integer, db.ForeignKey('mto.staff.id'), nullable=False)
+    owner = db.relationship('Staff', backref='appointments', foreign_keys=[owner_id], lazy=True)
     old_owner_id = db.Column(db.Integer, db.ForeignKey('mto.staff.id'))
     date_time = db.Column(db.DateTime)
     reason = db.Column(db.String(500))
+
 
 class Movement(db.Model):
     __tablename__ = 'movements'
@@ -62,6 +79,8 @@ class Movement(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     mts_id = db.Column(db.Integer, db.ForeignKey('mto.mts.id'), nullable=False)
     room_id = db.Column(db.Integer, db.ForeignKey('mto.rooms.id'), nullable=False)
+    room = db.relationship('Room', backref='movements', foreign_keys=[room_id], lazy=True)
     old_room_id = db.Column(db.Integer, db.ForeignKey('mto.rooms.id'))
     date_time = db.Column(db.DateTime)
     person_id = db.Column(db.Integer, db.ForeignKey('mto.staff.id'))
+    person = db.relationship('Staff', backref='movements', lazy=True)
