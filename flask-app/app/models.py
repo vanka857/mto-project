@@ -51,7 +51,8 @@ class MTS(db.Model):
     movements = db.relationship('Movement', backref='MTS', lazy=True, order_by='Movement.date_time.desc()')
     appointments = db.relationship('Appointment', backref='MTS', lazy=True, order_by='Appointment.date_time.desc()')
     category_id = db.Column(db.Integer, db.ForeignKey('mto.mts_category.id'), nullable=True)
-    category= db.relationship('MTSCategory', lazy=True)
+    category = db.relationship('MTSCategory', lazy=True)
+    image_filename = db.Column(db.String(255))
 
 
 class MTSCategory(db.Model):

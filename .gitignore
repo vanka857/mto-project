@@ -3,3 +3,5 @@ old
 temp
 **.DS_Store
 **_temp**
+flask-app/migrations/*
+uploads*

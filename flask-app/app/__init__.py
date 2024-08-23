@@ -1,11 +1,13 @@
 from flask import Flask, current_app
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 from flask_session import Session
 from config import Config
 import os
 
 
 db = SQLAlchemy(session_options={"expire_on_commit": False})
+migrate = Migrate()
 sess = Session()
 
 def create_app():
@@ -19,9 +21,10 @@ def create_app():
 
     # Инициализация для работы с базой
     db.init_app(app)
+    migrate.init_app(app, db)
 
-    from . import routes
-    app.register_blueprint(routes.bp)
+    from .routes import bp as main_bp
+    app.register_blueprint(main_bp)
 
     return app
 

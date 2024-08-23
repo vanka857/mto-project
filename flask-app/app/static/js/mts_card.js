@@ -40,6 +40,17 @@ class Card {
         this.modal = modal;
     }
 
+    showImage(filename) {
+        if (!filename) {
+            filename = this.item_data.getSourceDataValueOne('image_filename')
+        }
+        if (filename) {
+            const imgElement = document.getElementById('mts-image');
+            imgElement.src = `/images/${filename}`;
+            imgElement.style.display = 'block'; // Показываем изображение
+        } 
+    }
+
     // метод для отрисовки карточки МТС
     render() {
         const container =  `
@@ -48,6 +59,14 @@ class Card {
                     <span id="inv-number">${this.inventory_number}</span>
                     <span id="name">${this.item_name}</span>
                 </div>
+            
+                <img id="mts-image" src="" alt="MTS Image">
+
+                <form id="card-upload-form" enctype="multipart/form-data">
+                    <input type="file" id="card-file-input" name="file" accept="image/*" />
+                    <button type="submit">Загрузить картинку</button>
+                </form>
+
                 <table id="card-table">
                     <thead>
                     <tr>
@@ -66,6 +85,46 @@ class Card {
             this.modal.setModalContent(container);
         }
 
+        const mtsId = this.item_data.getSourceDataValueOne('id')
+        if (mtsId) {
+            const form = document.getElementById('card-upload-form')
+            form.style.display = 'flex';
+
+            // Добавление обработчиков для кнопок
+            // Handle form submission to upload image
+            form.addEventListener('submit', (event) => {
+                event.preventDefault(); // Prevent the default form submission
+    
+                const formData = new FormData();
+                const fileInput = document.getElementById('card-file-input');
+                const file = fileInput.files[0];
+    
+                if (file) {
+                    formData.append('file', file);
+                    const mtsId = this.item_data.getSourceDataValueOne('id'); // Замените на реальный ID MTS
+    
+                    fetch(`/upload/${mtsId}`, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Image uploaded successfully');
+                            this.showImage(data.filename);
+                        } else {
+                            alert('Failed to upload image');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error uploading image:', error);
+                    });
+                } else {
+                    alert('Please select a file');
+                }
+            });    
+        }
+        
         // добавление классов к таблице для скрытия ненужных столбцов
         // в случае, если у нас только excel или только mts данные
         const table = document.getElementById('card-table');
@@ -134,6 +193,8 @@ class Card {
             // для отображения расхождений, если они есть сразу
             this.updateDiscrepancy(key_id);
         });
+
+        this.showImage();
 
         // показ модального окна с контентом, если оно задано
         if (this.modal) {

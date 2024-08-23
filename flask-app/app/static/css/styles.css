@@ -382,3 +382,16 @@ button:disabled, input[type=file]::file-selector-button:disabled ,  input[type=s
     text-align: center;
     font-size: x-large;
 }     
+
+#mts-image {
+    max-width: 100%;
+    max-height: 400px;
+    display: none;
+    margin: auto;
+}
+
+#card-upload-form {
+    display: none;
+    justify-content: center;
+    margin-bottom: 40px;
+}

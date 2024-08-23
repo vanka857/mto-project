@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, session, jsonify, current_app, redirect, url_for
+from flask import Blueprint, render_template, request, session, jsonify, current_app, redirect, url_for, send_from_directory
 from datetime import datetime
 import os
 from werkzeug.utils import secure_filename
@@ -8,10 +8,12 @@ from .models import db, MTS, Room, Staff, Movement, Appointment, MTSCategory
 from .forms import SearchForm
 from .source.reader import read_excel_file
 from .source.data import InventoryItem, InventorySheet, BasicSheet, Column
+from .source.image_process import allowed_file, resize_and_save_image, generate_filename
 
 
 bp = Blueprint('main', __name__)
 app_title = 'Материально-техническое обеспечение 0.1.2'
+
 
 inventory_columns_to_show = [
     Column('number_excel', 'Номер в ведомости'),
@@ -192,7 +194,7 @@ def upload():
     file = request.files['file']
     if file and (file.filename.endswith('.xls') or file.filename.endswith('.xlsx')):
         filename = secure_filename(file.filename)
-        folder = current_app.config['UPLOAD_FOLDER']
+        folder = current_app.config['EXCEL_UPLOAD_FOLDER']
 
         if not os.path.exists(folder):
             os.makedirs(folder)
@@ -309,3 +311,40 @@ def fetch_from_db():
     inventories_to_send = inventories + [not_founded_sheet]
 
     return return_data_as_dict(inventories_to_send, 'Fetched success!', f'{found} Elements were fetched!')
+
+
+@bp.route('/upload/<int:mts_id>', methods=['POST'])
+def upload_file(mts_id):
+    if 'file' not in request.files:
+        return redirect(request.url)
+    
+    file = request.files['file']
+
+    dir_path = current_app.config['IMAGE_UPLOAD_FOLDER']
+    os.makedirs(dir_path, exist_ok=True)
+
+    if file and allowed_file(file.filename, allowed_extensions=current_app.config['IMAGE_ALLOWED_EXTENSIONS']):
+        file_extension = file.filename.rsplit('.', 1)[1].lower()
+        filename = generate_filename(mts_id, file_extension)
+        file_path = os.path.join(dir_path, filename)
+        
+        # Save the file temporarily
+        temp_path = os.path.join(dir_path, 'temp.' + file_extension)
+        file.save(temp_path)
+        
+        # Resize and save the image
+        resize_and_save_image(temp_path, file_path)
+        
+        os.remove(temp_path)  # Remove temporary file
+        
+        # Update MTS record
+        mts = MTS.query.get(mts_id)
+        mts.image_filename = filename
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Successfully upload!', 'filename': filename}), 200
+    return 'File not allowed', 400
+
+@bp.route('/images/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(current_app.config['IMAGE_UPLOAD_FOLDER'], filename)
