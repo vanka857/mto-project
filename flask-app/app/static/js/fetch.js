@@ -6,6 +6,7 @@ let db_connected = false;
 // Храним выводимые на странице таблицы
 let data_tables = [];
 
+// При загрузке страницы добавлеям обработчики для кнопок
 document.addEventListener('DOMContentLoaded', function() {
     resetPage();
 
@@ -16,16 +17,20 @@ document.addEventListener('DOMContentLoaded', function() {
     // Обработчик события изменения значения поля выбора файла
     fileInput.addEventListener('change', function() {
         // Проверка, выбран ли файл
-        submitButton.disabled = !this.files.length;
         resetPage();
+        submitButton.disabled = !this.files.length;
     });
 
     form.addEventListener('submit', (event) => {
         event.preventDefault(); // Prevent the default form submission
-        const fileInput = document.getElementById('file-input');
         const file = fileInput.files[0];
         uploadFile(file);
     });   
+
+    document.getElementById('read-file-button').addEventListener('click', function() {readFile();});
+    document.getElementById('fetch-from-db-button').addEventListener('click', function() {fetchFromDB();});
+    document.getElementById('send-updates-button').addEventListener('click', function() {sendUpdates();});
+
 });
 
 // Вспомогательные функции для управления видимостью лоадера
@@ -53,7 +58,6 @@ async function uploadFile(file) {
 
         // вывод результата отправки в интерфейсе
         document.getElementById('read-file-button').disabled = false;
-        document.getElementById('upload-file-button').disabled = true;
     } catch (error) {
         console.error('Error:', error);
     }

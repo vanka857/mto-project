@@ -7,9 +7,9 @@
             <input type="file" accept=".xls,.xlsx">
             <button type="submit" disabled>Загрузить файл на сервер</button>
         </form>
-        <button id="read-file-button" class="action-button" onclick="readFile()" disabled>Обработать файл</button>
-        <button id="fetch-from-db-button" class="action-button" onclick="fetchFromDB()" disabled>Добавить данные из базы</button>
-        <button id="send-updates-button" class="action-button" onclick="sendUpdates()" disabled>Отправить изменения в базу</button>
+        <button id="read-file-button" class="action-button" disabled>Обработать файл</button>
+        <button id="fetch-from-db-button" class="action-button" disabled>Добавить данные из базы</button>
+        <button id="send-updates-button" class="action-button" disabled>Отправить изменения в базу</button>
         <div id="loading" style="display: none;">
             <img src="{{ url_for('static', filename='images/loading.gif') }}" alt="Processing..." />
         </div>
