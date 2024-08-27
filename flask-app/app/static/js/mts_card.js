@@ -63,8 +63,8 @@ class Card {
                 <img id="mts-image" src="" alt="MTS Image">
 
                 <form id="card-upload-form" enctype="multipart/form-data">
-                    <input type="file" id="card-file-input" name="file" accept="image/*" />
-                    <button type="submit">Загрузить картинку</button>
+                    <input type="file" name="file" accept="image/*" />
+                    <button type="submit" disabled>Загрузить картинку</button>
                 </form>
 
                 <table id="card-table">
@@ -90,13 +90,21 @@ class Card {
             const form = document.getElementById('card-upload-form')
             form.style.display = 'flex';
 
+            var fileInput = form.querySelector('input[type="file"]');
+            var submitButton = form.querySelector('button[type="submit"]');
+
+            // Обработчик события изменения значения поля выбора файла
+            fileInput.addEventListener('change', function() {
+                // Проверка, выбран ли файл
+                submitButton.disabled = !this.files.length;
+            });
+
             // Добавление обработчиков для кнопок
             // Handle form submission to upload image
             form.addEventListener('submit', (event) => {
                 event.preventDefault(); // Prevent the default form submission
     
                 const formData = new FormData();
-                const fileInput = document.getElementById('card-file-input');
                 const file = fileInput.files[0];
     
                 if (file) {
@@ -110,17 +118,17 @@ class Card {
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            alert('Image uploaded successfully');
+                            alert('Картинка успешно загружена!');
                             this.showImage(data.filename);
                         } else {
-                            alert('Failed to upload image');
+                            alert('Ошибка при загрузке картинки');
                         }
                     })
                     .catch(error => {
                         console.error('Error uploading image:', error);
                     });
                 } else {
-                    alert('Please select a file');
+                    alert('Сначала выберите файл');
                 }
             });    
         }

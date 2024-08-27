@@ -6,6 +6,28 @@ let db_connected = false;
 // Храним выводимые на странице таблицы
 let data_tables = [];
 
+document.addEventListener('DOMContentLoaded', function() {
+    resetPage();
+
+    var form = document.getElementById('upload-form');
+    var fileInput = form.querySelector('input[type="file"]');
+    var submitButton = form.querySelector('button[type="submit"]');
+
+    // Обработчик события изменения значения поля выбора файла
+    fileInput.addEventListener('change', function() {
+        // Проверка, выбран ли файл
+        submitButton.disabled = !this.files.length;
+        resetPage();
+    });
+
+    form.addEventListener('submit', (event) => {
+        event.preventDefault(); // Prevent the default form submission
+        const fileInput = document.getElementById('file-input');
+        const file = fileInput.files[0];
+        uploadFile(file);
+    });   
+});
+
 // Вспомогательные функции для управления видимостью лоадера
 function showLoading() {
     document.getElementById('loading').style.display = '';
@@ -16,10 +38,8 @@ function hideLoading() {
 }
 
 // Функция для работы с файлами и загрузки данных
-async function uploadFile() {
+async function uploadFile(file) {
     // получение файла из инпута
-    const fileInput = document.getElementById('file-input');
-    const file = fileInput.files[0];
     const formData = new FormData();
     formData.append('file', file);
 
@@ -32,8 +52,8 @@ async function uploadFile() {
         const data = await response.json();
 
         // вывод результата отправки в интерфейсе
-        document.getElementById('file-name').textContent = `Uploaded: ${data.filename}`;
         document.getElementById('read-file-button').disabled = false;
+        document.getElementById('upload-file-button').disabled = true;
     } catch (error) {
         console.error('Error:', error);
     }
@@ -57,9 +77,11 @@ function readFile() {
 // функция сброса состояния страницы
 function resetPage() {
     db_connected = false;
+    data_tables = [];
     document.getElementById('output').innerHTML = '';
-    document.getElementById('file-name').textContent = '';
-    document.querySelectorAll('.action-button').forEach(button => button.disabled = true);
+    document.querySelectorAll('.action-button').forEach(button => {
+        button.disabled = true;
+    });
     hideLoading();
 }
 
@@ -114,7 +136,7 @@ function sendUpdates() {
         submitChanges(updates);
         fetchFromDB();
     } else {
-        console.log('Нет изменений для отправки');
+        alert('Нет изменений для отправки!');
     }
 }
 

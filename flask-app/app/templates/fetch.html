@@ -3,12 +3,13 @@
 {% block content %}
 <div class="container">
     <div id="file-upload" class="controls">
-        <input type="file" id="file-input" accept=".xls,.xlsx" onchange="resetPage()">
-        <button id="upload-file-button" onclick="uploadFile()">Загрузить файл на сервер</button>
-        <div id="file-name"></div>
-        <button id="read-file-button" onclick="readFile()" disabled>Обработать файл</button>
-        <button id="fetch-from-db-button" onclick="fetchFromDB()" disabled>Добавить данные из базы</button>
-        <button id="send-updates-button" onclick="sendUpdates()" disabled>Отправить изменения в базу</button>
+        <form id="upload-form" enctype="multipart/form-data">
+            <input type="file" accept=".xls,.xlsx">
+            <button type="submit" disabled>Загрузить файл на сервер</button>
+        </form>
+        <button id="read-file-button" class="action-button" onclick="readFile()" disabled>Обработать файл</button>
+        <button id="fetch-from-db-button" class="action-button" onclick="fetchFromDB()" disabled>Добавить данные из базы</button>
+        <button id="send-updates-button" class="action-button" onclick="sendUpdates()" disabled>Отправить изменения в базу</button>
         <div id="loading" style="display: none;">
             <img src="{{ url_for('static', filename='images/loading.gif') }}" alt="Processing..." />
         </div>

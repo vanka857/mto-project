@@ -158,7 +158,12 @@ button:hover, input[type=file]::file-selector-button:hover,  input[type=submit]:
     background-color: #0056b3;
 }
 
-button:disabled, input[type=file]::file-selector-button:disabled ,  input[type=submit]:disabled{
+button:disabled{
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+input[type=file]::file-selector-button:disabled,  input[type=submit]:disabled {
     background-color: #ccc;
     cursor: not-allowed;
 }
