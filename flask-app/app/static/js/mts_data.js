@@ -50,6 +50,12 @@ class ItemData {
 
     // putOnBalance() {}
     // writeOff() {}
-    // changeData() {}
+    
+    changeData(key, new_value) {
+        if (this.mts_data) {
+            this.mts_data[key] = new_value;
+        }
+    }
+    
     // getUpdates() {}
 }

@@ -62,29 +62,34 @@ header nav ul li a:hover {
 }
 
 /* Стили для фильтров на странице поиска */
-div.navigator-filter {
-    margin: 10px;
+div.navigator-filter, 
+div.edit-form-filter {
+    margin: 10px 10px 25px 10px;
 }
 
 /* Стили для подписей формы поиска */
-#search-form label {
+#search-form label,
+.edit-form-container label {
     display: block; /* Полный блочный элемент */
     margin-bottom: 5px; /* Отступ снизу от меток */
 }
 
 /* Стили для импутов формы поиска */
 #search-form input[type="text"], 
-#search-form select {
+#search-form select, 
+.edit-form-container input[type="text"],
+.edit-form-container select {
     width: 100%; /* Полная ширина полей ввода */
     padding: 10px; /* Внутренние отступы полей ввода */
-    margin-bottom: 15px; /* Отступ снизу от полей ввода */
     border: 1px solid #ccc; /* Граница полей ввода */
     border-radius: 4px; /* Закругленные углы полей ввода */
     box-sizing: border-box; /* Учитывает границы и внутренние отступы в ширине */
 }
 
 #search-form input[type="text"]:focus, 
-#search-form select:focus {
+#search-form select:focus,
+.edit-form-container input[type="text"]:focus,
+.edit-form-container select:focus {
     border-color: #007BFF; /* Цвет границы при фокусе */
     outline: none; /* Убираем стандартный контур при фокусе */
 }
@@ -328,11 +333,13 @@ input[type=file]::file-selector-button:disabled,  input[type=submit]:disabled {
     width: 105px;
 }
 
-#card-table .edit-btn-active {
+button.edit-btn-active,
+input.edit-btn-active {
     background-color: #bd0000;
 }
 
-#card-table .edit-btn-active:hover {
+button.edit-btn-active:hover,
+input.edit-btn-active:hover {
     background-color: #830000;
 }
 
@@ -399,4 +406,20 @@ input[type=file]::file-selector-button:disabled,  input[type=submit]:disabled {
     display: none;
     justify-content: center;
     margin-bottom: 40px;
+}
+
+.edit-form {
+    display: block;
+}
+
+.edit-form-container {
+    display: block;
+    border: 2px solid #bd0000;
+    border-radius: 5px;
+    min-height: 100px;
+    margin: 0px 10px 20px 10px;
+}
+
+.edit-form-container[hidden] {
+    display: none;
 }

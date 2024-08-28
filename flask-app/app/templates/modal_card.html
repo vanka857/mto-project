@@ -1,0 +1,57 @@
+<div class="container">
+    <div id="card-header">
+        <span id="inv-number"></span>
+        <span id="name"></span>
+    </div>
+
+    <img id="mts-image" src="" alt="MTS Image">
+
+    <form id="card-upload-form" enctype="multipart/form-data">
+        <input type="file" name="file" accept="image/*" />
+        <button type="submit" disabled>Загрузить картинку</button>
+    </form>
+    
+    <form id="room-edit-form" class="edit-form">
+        {{ room_edit_form.csrf_token }}
+        {{ room_edit_form.mts_id }}
+        {{ room_edit_form.submit_btn(class="edit-form-submit-button") }}
+        <div class="edit-form-container">
+            <div class="edit-form-filter">
+                <label for="new_room">{{ room_edit_form.new_room.label }}</label>
+                {{ room_edit_form.new_room }}
+            </div>
+            <div class="edit-form-filter">
+                <label for="responsible_for_moving">{{ room_edit_form.responsible_for_moving.label }}</label>
+                {{ room_edit_form.responsible_for_moving }}
+            </div>
+        </div>
+    </form>
+
+    <form id="owner-edit-form" class="edit-form">
+        {{ owner_edit_form.csrf_token }}
+        {{ owner_edit_form.mts_id }}
+        {{ owner_edit_form.submit_btn(class="edit-form-submit-button") }}
+        <div class="edit-form-container">
+            <div class="edit-form-filter">
+                <label for="new_owner">{{ owner_edit_form.new_owner.label }}</label>
+                {{ owner_edit_form.new_owner }}
+            </div>
+            <div class="edit-form-filter">
+                <label for="reason">{{ owner_edit_form.reason.label }}</label>
+                {{ owner_edit_form.reason }}
+            </div>
+        </div>
+    </form>
+
+    <table id="card-table">
+        <thead>
+        <tr>
+            <th class="excel-cell">Данные из excel</th>
+            <th class="error-cell"></th>
+            <th class="mts-cell">Данные из базы</th>
+        </tr>
+        </thead>
+        <tbody id="card-table-body">
+        </tbody>
+    </table>
+</div>

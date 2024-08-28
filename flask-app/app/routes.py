@@ -5,7 +5,7 @@ from werkzeug.utils import secure_filename
 from sqlalchemy.orm import subqueryload
 from sqlalchemy import or_, func
 from .models import db, MTS, Room, Staff, Movement, Appointment, MTSCategory
-from .forms import SearchForm
+from .forms import SearchForm, RoomEditForm, OwnerEditForm
 from .source.reader import read_excel_file
 from .source.data import InventoryItem, InventorySheet, BasicSheet, Column
 from .source.image_process import allowed_file, resize_and_save_image, generate_filename
@@ -348,3 +348,122 @@ def upload_file(mts_id):
 @bp.route('/images/<filename>')
 def uploaded_file(filename):
     return send_from_directory(current_app.config['IMAGE_UPLOAD_FOLDER'], filename)
+
+@bp.route('/get-modal-content', methods=['GET', 'POST'])
+def get_modal_content():
+    room_edit_form = RoomEditForm()
+    owner_edit_form = OwnerEditForm()
+
+    # Заполнение списка выборов
+    room_edit_form.new_room.choices = [('', 'Не выбрано')] + [
+        (c.name_, c.name_) for c in db.session.query(Room.name_).distinct().order_by(Room.name_)
+    ]
+    room_edit_form.responsible_for_moving.choices = [('', 'Не выбрано')] + [
+        (s.surname, s.surname) for s in db.session.query(Staff.surname).distinct().order_by(Staff.surname)
+    ]
+    owner_edit_form.new_owner.choices = [('', 'Не выбрано')] + [
+        (r.surname, r.surname) for r in db.session.query(Staff.surname).distinct().order_by(Staff.surname)
+    ]
+
+    date_time = datetime.now()
+
+    if room_edit_form.validate_on_submit():
+        # Получаем данные из формы
+        mts_id = room_edit_form.mts_id.data
+        new_room_name = room_edit_form.new_room.data
+        responsible_surname = room_edit_form.responsible_for_moving.data
+
+        if not new_room_name:
+            return jsonify({'success': False, 
+                            'nothing_to_change': True, 
+                            'message': f'MTS {mts_id}: Не изменено'}), 200
+
+        # Найти новый объект комнаты
+        new_room_obj = Room.query.filter(Room.name_ == new_room_name).first()
+        if not new_room_obj:
+            return jsonify({'success': False, 
+                            'nothing_to_change': False, 
+                            'message': 'Комната не найдена.'}), 200
+
+        # Найти ответственного за перемещение
+        responsible_for_moving_obj = Staff.query.filter(Staff.surname == responsible_surname).first()
+
+        # Найти старую комнату
+        old_room_obj = Movement.query.filter(Movement.mts_id == mts_id).order_by(Movement.date_time.desc()).first()
+
+        # Создание нового перемещения
+        movement = Movement(
+            mts_id=mts_id, 
+            room=new_room_obj, 
+            old_room_id=old_room_obj.room_id if old_room_obj else None,
+            person=responsible_for_moving_obj if responsible_for_moving_obj else None,
+            date_time=date_time
+        )
+
+        # Добавление и сохранение нового перемещения в базу данных
+        try:
+            db.session.add(movement)
+            db.session.commit()
+            return jsonify({'success': True, 
+                            'nothing_to_change': False, 
+                            'message': f'MTS {mts_id}: Перемещение успешно добавлено. Новая комната: {new_room_obj.name_}.', 
+                            'date_time': date_time.strftime("%Y-%m-%d %H:%M:%S")
+                            }), 200
+
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'success': False, 
+                            'nothing_to_change': False, 
+                            'message': f'MTS {mts_id}: Ошибка при добавлении перемещения: {str(e)}'
+                            }), 200
+        
+    if owner_edit_form.validate_on_submit():
+        # Получаем данные из формы
+        mts_id = owner_edit_form.mts_id.data
+        new_owner_surname = owner_edit_form.new_owner.data
+        reason = owner_edit_form.reason.data
+
+        if not new_owner_surname:
+            return jsonify({'success': False, 
+                            'nothing_to_change': True, 
+                            'message': f'MTS {mts_id}: Не изменено'}), 200
+
+        # Найти новый объект ответственного
+        new_owner_obj = Staff.query.filter(Staff.surname == new_owner_surname).first()
+        if not new_owner_obj:
+            return jsonify({'success': False, 
+                            'nothing_to_change': False, 
+                            'message': 'Ответственный не найден.'
+                            }), 200
+
+        # Найти старого ответственного
+        old_owner_obj = Appointment.query.filter(Appointment.mts_id == mts_id).order_by(Appointment.date_time.desc()).first()
+
+        # Создание нового назначения
+        appointment = Appointment(
+            mts_id=mts_id, 
+            owner=new_owner_obj, 
+            old_owner_id=old_owner_obj.id if old_owner_obj else None,
+            reason=reason if reason else None,
+            date_time=date_time
+        )
+
+        # Добавление и сохранение нового назначения в базу данных
+        try:
+            db.session.add(appointment)
+            db.session.commit()
+            return jsonify({'success': True, 
+                            'nothing_to_change': False,
+                            'message': f'MTS {mts_id}: Назначение успешно добавлено. Новый ответственный: {new_owner_obj.surname}.',
+                            'date_time': date_time.strftime("%Y-%m-%d %H:%M:%S")
+                            }), 200
+
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'success': False, 
+                            'nothing_to_change': False,
+                            'message': f'MTS {mts_id}: Ошибка при добавлении перемещения: {str(e)}'
+                            }), 200
+        
+
+    return render_template('modal_card.html', room_edit_form=room_edit_form, owner_edit_form=owner_edit_form)

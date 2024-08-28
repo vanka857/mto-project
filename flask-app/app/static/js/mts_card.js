@@ -1,5 +1,77 @@
 // Файл со скриптами, связанными с отображением карточки
 
+class EditForm {
+    /*
+        Класс для форм редактирования помещения и ответственного
+    */
+    constructor(mts_id, form_elem, on_save_callback) {
+        this.form_elem = form_elem
+        this.form_elem.mts_id.value = mts_id;
+        this.on_save_callback = on_save_callback
+        
+        this.form_container = this.form_elem.querySelector('.edit-form-container');
+        this.form_container.hidden = true;
+
+        this.button = this.form_elem.querySelector('input.edit-form-submit-button');
+        
+        if (this.button) {
+            this.default_text_content = this.button.value;
+            this.button.disabled = true;            
+            this.editing = false;
+            this.button.addEventListener('click', (event) => {
+                event.preventDefault(); // Предотвращаем стандартное поведение формы
+
+                if (this.editing) {
+                    this.save();
+                    this.button.value = this.default_text_content;
+                    this.button.classList.remove('edit-btn-active');
+                    this.form_container.hidden = true;
+                } else {
+                    this.button.value = 'Сохранить';
+                    this.button.classList.add('edit-btn-active');
+                    this.form_container.hidden = false;
+                }
+                
+                this.editing = !this.editing;
+            });   
+        }
+    }
+
+    enable() {
+        if (this.button) {
+            this.button.disabled = false;
+        }
+    }
+
+    disable() {
+        if (this.button) {
+            this.button.disabled = true;
+        }
+    }
+
+    save() {
+        const formData = new FormData(this.form_elem);
+        
+        // Запрос на сервер для поиска
+        fetch('/get-modal-content', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                this.on_save_callback(this, formData, data.date_time);
+                this.form_elem.reset();
+            } else if (!data.nothing_to_change){
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            alert(error.message);
+        });        
+    }
+}
+
 
 class Card {
     /*
@@ -53,100 +125,122 @@ class Card {
 
     // метод для отрисовки карточки МТС
     render() {
-        const container =  `
-            <div class="container">
-                <div id="card-header">
-                    <span id="inv-number">${this.inventory_number}</span>
-                    <span id="name">${this.item_name}</span>
-                </div>
-            
-                <img id="mts-image" src="" alt="MTS Image">
 
-                <form id="card-upload-form" enctype="multipart/form-data">
-                    <input type="file" name="file" accept="image/*" />
-                    <button type="submit" disabled>Загрузить картинку</button>
-                </form>
+        // Запрос шаблона базового контейнера с сервера
+        fetch('/get-modal-content')
+        .then(response => response.text())
+        .then(html => {
+            if (this.modal) {
+                // Установка шаблона карточки в модальное окно
+                this.modal.setModalContent(html);
+                document.querySelector('#card-header #inv-number').textContent = this.inventory_number;
+                document.querySelector('#card-header #name').textContent = this.item_name;
 
-                <table id="card-table">
-                    <thead>
-                    <tr>
-                        <th class="excel-cell">Данные из excel</th>
-                        <th class="error-cell"></th>
-                        <th class="mts-cell">Данные из базы</th>
-                    </tr>
-                    </thead>
-                    <tbody id="card-table-body">
-                    </tbody>
-                </table>
-            </div>`;
+                const state = this.item_data.getDataState();
+                const mts_id = this.item_data.getSourceDataValueOne('id');
 
-        // установка базового контейнера в модальное окно
-        if (this.modal) {
-            this.modal.setModalContent(container);
-        }
+                // Создание и настройка форм редактирования помещения и ответственного
+                const on_save_room_callback = (edit_form, form_data, date_time) => {
+                    this.item_data.changeData('room_name', form_data.get('new_room'));
+                    this.item_data.changeData('latest_movement_date_time', date_time);
+                    // TODO optimistic update room name
+                };
+                this.room_edit_form = new EditForm(mts_id, document.getElementById('room-edit-form'), on_save_room_callback);
+                
+                const on_save_owner_callback = (edit_form, form_data, date_time) => {
+                    this.item_data.changeData('responsible_surname', form_data.get('new_owner'));
+                    this.item_data.changeData('latest_appointment_date_time', date_time);
+                    // TODO optimistic update owner name
+                };
+                this.owner_edit_form = new EditForm(mts_id, document.getElementById('owner-edit-form'), on_save_owner_callback);
 
-        const mtsId = this.item_data.getSourceDataValueOne('id')
-        if (mtsId) {
-            const form = document.getElementById('card-upload-form')
-            form.style.display = 'flex';
-
-            var fileInput = form.querySelector('input[type="file"]');
-            var submitButton = form.querySelector('button[type="submit"]');
-
-            // Обработчик события изменения значения поля выбора файла
-            fileInput.addEventListener('change', function() {
-                // Проверка, выбран ли файл
-                submitButton.disabled = !this.files.length;
-            });
-
-            // Добавление обработчиков для кнопок
-            // Handle form submission to upload image
-            form.addEventListener('submit', (event) => {
-                event.preventDefault(); // Prevent the default form submission
-    
-                const formData = new FormData();
-                const file = fileInput.files[0];
-    
-                if (file) {
-                    formData.append('file', file);
-                    const mtsId = this.item_data.getSourceDataValueOne('id'); // Замените на реальный ID MTS
-    
-                    fetch(`/upload/${mtsId}`, {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert('Картинка успешно загружена!');
-                            this.showImage(data.filename);
-                        } else {
-                            alert('Ошибка при загрузке картинки');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error uploading image:', error);
-                    });
-                } else {
-                    alert('Сначала выберите файл');
+                if (state == 'mts-only' || state == 'both-data') {
+                    this.room_edit_form.enable();
+                    this.owner_edit_form.enable();
                 }
-            });    
-        }
-        
-        // добавление классов к таблице для скрытия ненужных столбцов
-        // в случае, если у нас только excel или только mts данные
-        const table = document.getElementById('card-table');
-        switch (this.item_data.getDataState()){
-            case 'mts-only':
-                table.classList.add('hide1-2');
-                break;
-            case 'excel-only':
-                table.classList.add('hide2-3');
-                break;
-        }
 
-        const table_body = document.getElementById('card-table-body');
+                // Создание блока для отрисовки и редактирования картинок
+                if (mts_id) {
+                        this.addImageBlock(mts_id);
+                }
+                
+                // добавление классов к таблице для скрытия ненужных столбцов
+                // в случае, если у нас только excel или только mts данные
+                const table = document.getElementById('card-table');
+                switch (state){
+                    case 'mts-only':
+                        table.classList.add('hide1-2');
+                        break;
+                    case 'excel-only':
+                        table.classList.add('hide2-3');
+                        break;
+                }
 
+                // Добавление данных и кнопок в таблицу
+                const table_body = document.getElementById('card-table-body');
+                this.addRows(table_body);
+
+                // Отображение изображения
+                this.showImage();
+
+                // показ модального окна с контентом, если оно задано
+                if (this.modal) {
+                    this.modal.showModal();
+                }
+            }
+        })
+        .catch(error => console.error('Error loading the modal content:', error));
+    }
+
+    // Метод добавления блока с изображениями
+    addImageBlock(mts_id) {
+        const form = document.getElementById('card-upload-form')
+        form.style.display = 'flex';
+
+        var fileInput = form.querySelector('input[type="file"]');
+        var submitButton = form.querySelector('button[type="submit"]');
+
+        // Обработчик события изменения значения поля выбора файла
+        fileInput.addEventListener('change', function() {
+            // Проверка, выбран ли файл
+            submitButton.disabled = !this.files.length;
+        });
+
+        // Добавление обработчиков для кнопок
+        // Handle form submission to upload image
+        form.addEventListener('submit', (event) => {
+            event.preventDefault(); // Prevent the default form submission
+
+            const formData = new FormData();
+            const file = fileInput.files[0];
+
+            if (file) {
+                formData.append('file', file);
+
+                fetch(`/upload/${mts_id}`, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Картинка успешно загружена!');
+                        this.showImage(data.filename);
+                    } else {
+                        alert('Ошибка при загрузке картинки');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error uploading image:', error);
+                });
+            } else {
+                alert('Сначала выберите файл');
+            }
+        });
+    }
+
+    // Метод для добавление строк с данными и кнопками в таблицу
+    addRows(table_body) {
         // Структуры данных для кнопки редактирования
         const edit_button_data = {
             label: "Изменить",
@@ -167,7 +261,7 @@ class Card {
                     displayDiv.classList.remove('data-display-editable');
                     displayDiv.contentEditable = 'false';
     
-                    this.addChanges(id);
+                    this.addSimpleChanges(id);
                     this.updateDiscrepancy(id);
                 }
             }
@@ -185,7 +279,7 @@ class Card {
                 row = this.getCardRow(key_id, this.item_data.keys_dict[key_id]);    
             }
             table_body.appendChild(row);    
-             
+            
             // Обработка проблемы со вставкой html-кода в contentEditable div
             var contentEditableNodes = document.querySelectorAll('.data-display');
             [].forEach.call(contentEditableNodes, function(div) {
@@ -201,13 +295,6 @@ class Card {
             // для отображения расхождений, если они есть сразу
             this.updateDiscrepancy(key_id);
         });
-
-        this.showImage();
-
-        // показ модального окна с контентом, если оно задано
-        if (this.modal) {
-            this.modal.showModal();
-        }
     }
 
     // меод, который готовит строку в таблице на карточке Card
@@ -316,7 +403,7 @@ class Card {
 
     // Добавление нового значения в словарь обновлений. 
     // key-id — это столбца с данными
-    addChanges(key_id) {
+    addSimpleChanges(key_id) {
         this.changes[key_id] = document.getElementById('mts-data-' + key_id).textContent;
         const data_status_label = document.getElementById('data-status-label-' + key_id);
         data_status_label.textContent = 'Изменено';
