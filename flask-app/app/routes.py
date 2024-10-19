@@ -389,13 +389,13 @@ def get_modal_content():
         responsible_for_moving_obj = Staff.query.filter(Staff.surname == responsible_surname).first()
 
         # Найти старую комнату
-        old_room_obj = Movement.query.filter(Movement.mts_id == mts_id).order_by(Movement.date_time.desc()).first()
+        old_movement_obj = Movement.query.filter(Movement.mts_id == mts_id).order_by(Movement.date_time.desc()).first()
 
         # Создание нового перемещения
         movement = Movement(
             mts_id=mts_id, 
             room=new_room_obj, 
-            old_room_id=old_room_obj.room_id if old_room_obj else None,
+            old_room_id=old_movement_obj.room_id if old_movement_obj else None,
             person=responsible_for_moving_obj if responsible_for_moving_obj else None,
             date_time=date_time
         )
@@ -437,13 +437,13 @@ def get_modal_content():
                             }), 200
 
         # Найти старого ответственного
-        old_owner_obj = Appointment.query.filter(Appointment.mts_id == mts_id).order_by(Appointment.date_time.desc()).first()
+        old_appointment_obj = Appointment.query.filter(Appointment.mts_id == mts_id).order_by(Appointment.date_time.desc()).first()
 
         # Создание нового назначения
         appointment = Appointment(
             mts_id=mts_id, 
             owner=new_owner_obj, 
-            old_owner_id=old_owner_obj.id if old_owner_obj else None,
+            old_owner_id=old_appointment_obj.owner_id if old_appointment_obj else None,
             reason=reason if reason else None,
             date_time=date_time
         )
